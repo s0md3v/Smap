@@ -24,17 +24,20 @@ func ConvertTime(unixTime time.Time, format string) string {
 	return fmt.Sprintf("%d", unixTime.Unix())
 }
 
-func Write(str string, dest string) {
+func OpenFile(filepath string) *os.File {
+	f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Fprint(os.Stderr, fmt.Sprintf("Failed to open output file %s for writing\n", filepath))
+		fmt.Fprint(os.Stderr, "QUITTING!\n")
+		os.Exit(1)
+	}
+	return f
+}
+
+func Write(str string, dest string, openedFile *os.File) {
 	if dest == "-" {
 		fmt.Print(str)
 		return
 	}
-	f, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Failed to open output file %s for writing\n", dest)
-		fmt.Fprint(os.Stderr, "QUITTING!\n")
-		os.Exit(1)
-	}
-	f.WriteString(str)
-	defer f.Close()
+	openedFile.WriteString(str)
 }

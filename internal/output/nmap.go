@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -9,17 +10,20 @@ import (
 	g "github.com/s0md3v/smap/internal/global"
 )
 
+var openedNmapFile *os.File
+
 func pad(str string, n int) string {
 	return strings.Repeat(" ", n) + str
 }
 
 func StartNmap() {
 	if value, ok := g.Args["oN"]; ok {
+		openedNmapFile = OpenFile(value)
 		startstr := ConvertTime(g.ScanStartTime, "nmap-file")
-		Write(fmt.Sprintf("# Starting Nmap 9.99 ( https://nmap.org ) at %s as: %s\n", startstr, GetCommand()), value)
+		Write(fmt.Sprintf("# Starting Nmap 9.99 ( https://nmap.org ) at %s as: %s\n", startstr, GetCommand()), value, openedNmapFile)
 	} else {
 		startstr := ConvertTime(g.ScanStartTime, "nmap-stdout")
-		Write(fmt.Sprintf("Starting Nmap 9.99 ( https://nmap.org ) at %s\n", startstr), "-")
+		Write(fmt.Sprintf("Starting Nmap 9.99 ( https://nmap.org ) at %s\n", startstr), "-", openedNmapFile)
 	}
 }
 
@@ -63,25 +67,30 @@ func ContinueNmap(result g.Output) {
 	}
 	thisOutput += "\n"
 	if value, ok := g.Args["oN"]; ok {
-		Write(thisOutput, value)
+		Write(thisOutput, value, openedNmapFile)
 	} else {
-		Write(thisOutput, "-")
+		Write(thisOutput, "-", openedNmapFile)
 	}
 }
 
 func EndNmap() {
 	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
 	footer := "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n"
+	esTotal := ""
+	if g.TotalHosts > 1 {
+		esTotal = "es"
+	}
+	sAlive := ""
+	if g.AliveHosts > 1 {
+		sAlive = "s"
+	}
 	if value, ok := g.Args["oN"]; ok {
 		endstr := ConvertTime(g.ScanEndTime, "nmap-file")
-		plural := ""
-		if g.TotalHosts > 1 {
-			plural = "es"
-		}
-		footer += fmt.Sprintf("# Nmap done at %s -- %d IP address%s (%d host up) scanned in %s seconds\n", endstr, g.TotalHosts, plural, g.AliveHosts, elapsed)
-		Write(footer, value)
+		footer += fmt.Sprintf("# Nmap done at %s -- %d IP address%s (%d host%s up) scanned in %s seconds\n", endstr, g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
+		Write(footer, value, openedNmapFile)
 	} else {
-		footer += fmt.Sprintf("Nmap done: %d IP address (%d host up) scanned in %s seconds\n", g.TotalHosts, g.AliveHosts, elapsed)
-		Write(footer, "-")
+		footer += fmt.Sprintf("Nmap done: %d IP address%s (%d host%s up) scanned in %s seconds\n", g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
+		Write(footer, "-", openedNmapFile)
 	}
+	defer openedNmapFile.Close()
 }

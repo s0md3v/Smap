@@ -154,7 +154,6 @@ func scanner() {
 	g.ScanStartTime = time.Now()
 	for target := range targetsChannel {
 		threads <- true
-		activeOutputs.Add(1)
 		go func() {
 			processScanObject(target)
 			activeScans.Done()
@@ -221,6 +220,7 @@ func processScanObject(object scanObject) {
 	output.Start = scanStarted
 	output.End = time.Now()
 	g.Increment(1)
+	activeOutputs.Add(1)
 	outputChannel <- output
 }
 
