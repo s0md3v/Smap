@@ -2,8 +2,8 @@ package output
 
 import (
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	g "github.com/s0md3v/smap/internal/global"
 )

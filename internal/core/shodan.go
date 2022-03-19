@@ -27,7 +27,7 @@ func Query(ip string) []byte {
 		return []byte{}
 	}
 	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil{
+	if err != nil {
 		return []byte{}
 	}
 	req.Close = true

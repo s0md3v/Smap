@@ -8,30 +8,30 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 	"sync"
+	"time"
 
 	"encoding/json"
 
+	"github.com/s0md3v/smap/internal/db"
 	g "github.com/s0md3v/smap/internal/global"
 	o "github.com/s0md3v/smap/internal/output"
-	"github.com/s0md3v/smap/internal/db"
 	"github.com/weppos/publicsuffix-go/publicsuffix"
 )
 
-var  (
-	activeScans sync.WaitGroup
-	activeOutputs sync.WaitGroup
-	activeEnders sync.WaitGroup
+var (
+	activeScans    sync.WaitGroup
+	activeOutputs  sync.WaitGroup
+	activeEnders   sync.WaitGroup
 	targetsChannel = make(chan scanObject, 3)
-	outputChannel = make(chan g.Output, 1000)
+	outputChannel  = make(chan g.Output, 1000)
 	reAddressRange = regexp.MustCompile(`^\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?$`)
 )
 
 type scanObject struct {
-    IP       string
-    Ports    []int
-    Hostname string
+	IP       string
+	Ports    []int
+	Hostname string
 }
 
 type respone struct {
@@ -61,7 +61,7 @@ func getPorts() []int {
 
 func isIPv4(str string) bool {
 	parsed := net.ParseIP(str)
-	if parsed == nil{
+	if parsed == nil {
 		return false
 	}
 	return reAddressRange.MatchString(str)
@@ -73,16 +73,16 @@ func isHostname(str string) bool {
 }
 
 func isAddressRange(str string) bool {
-	if !reAddressRange.MatchString(str){
+	if !reAddressRange.MatchString(str) {
 		return false
 	}
-	for _, part := range strings.Split(str, "."){
-		for _, each := range strings.Split(part, "-"){
-			if each[0] == 48{ // 48 is 0 in decimal
+	for _, part := range strings.Split(str, ".") {
+		for _, each := range strings.Split(part, "-") {
+			if each[0] == 48 { // 48 is 0 in decimal
 				return false
 			}
 			n, _ := strconv.Atoi(each)
-			if n > 255{
+			if n > 255 {
 				return false
 			}
 		}
@@ -92,7 +92,7 @@ func isAddressRange(str string) bool {
 
 func hostnameToIP(hostname string) string {
 	ips, _ := net.LookupIP(hostname)
-	if len(ips) > 0{
+	if len(ips) > 0 {
 		return ips[0].String()
 	}
 	return ""
@@ -119,12 +119,12 @@ func handleOutput() {
 		startOutput = []func(){o.StartXML, o.StartGrep, o.StartNmap}
 		continueOutput = []func(g.Output){o.ContinueXML, o.ContinueGrep, o.ContinueNmap}
 		endOutput = []func(){o.EndXML, o.EndGrep, o.EndNmap}
-	} else if value, ok := g.Args["oX"]; ok{
+	} else if value, ok := g.Args["oX"]; ok {
 		startOutput = []func(){o.StartXML}
 		continueOutput = []func(g.Output){o.ContinueXML}
 		endOutput = []func(){o.EndXML}
 		g.XmlFilename = value
-	} else if value, ok := g.Args["oG"]; ok{
+	} else if value, ok := g.Args["oG"]; ok {
 		startOutput = []func(){o.StartGrep}
 		continueOutput = []func(g.Output){o.ContinueGrep}
 		endOutput = []func(){o.EndGrep}
@@ -153,9 +153,9 @@ func scanner() {
 	threads := make(chan bool, 3)
 	g.ScanStartTime = time.Now()
 	for target := range targetsChannel {
-		threads<-true
+		threads <- true
 		activeOutputs.Add(1)
-		go func(){
+		go func() {
 			processScanObject(target)
 			activeScans.Done()
 			<-threads
@@ -168,21 +168,21 @@ func createScanObjects(object string) {
 	activeScans.Add(1)
 	var oneObject scanObject
 	oneObject.Ports = g.PortList
-	if isIPv4(object){
+	if isIPv4(object) {
 		oneObject.IP = object
-		targetsChannel<-oneObject
-	} else if isHostname(object){
+		targetsChannel <- oneObject
+	} else if isHostname(object) {
 		ip := hostnameToIP(object)
-		if ip != ""{
+		if ip != "" {
 			oneObject.IP = ip
 			oneObject.Hostname = object
-			targetsChannel<-oneObject
+			targetsChannel <- oneObject
 		} else {
 			activeScans.Done()
 		}
-	} else if isIPv4(strings.Split(object, "/")[0]){
-		targetsChannel<-oneObject
-	} else if isAddressRange(object){
+	} else if isIPv4(strings.Split(object, "/")[0]) {
+		targetsChannel <- oneObject
+	} else if isAddressRange(object) {
 		return
 	} else {
 		activeScans.Done()
@@ -190,7 +190,7 @@ func createScanObjects(object string) {
 }
 
 func processScanObject(object scanObject) {
-	g.Increment(g.TotalHosts)
+	g.Increment(0)
 	scanStarted := time.Now()
 	response := Query(object.IP)
 	var output g.Output
@@ -220,13 +220,13 @@ func processScanObject(object scanObject) {
 	output.Ports = Correlate(filteredPorts, data.Cpes)
 	output.Start = scanStarted
 	output.End = time.Now()
-	g.Increment(g.AliveHosts)
-	outputChannel<-output
+	g.Increment(1)
+	outputChannel <- output
 }
 
 func Init() {
 	args, extra, invalid := ParseArgs()
-	if invalid{
+	if invalid {
 		os.Exit(1)
 	}
 	g.Args = args
@@ -235,28 +235,28 @@ func Init() {
 	go scanner()
 	go handleOutput()
 	g.PortList = getPorts()
-	if value, ok := g.Args["iL"]; ok{
+	if value, ok := g.Args["iL"]; ok {
 		file, err := os.Open(value)
-	    if err != nil {
-	        os.Exit(1)
-	    }
-	    defer file.Close()
+		if err != nil {
+			os.Exit(1)
+		}
+		defer file.Close()
 
-	    scanner := bufio.NewScanner(file)
-	    for scanner.Scan() {
-	        createScanObjects(scanner.Text())
-	    }
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			createScanObjects(scanner.Text())
+		}
 
-	    if err := scanner.Err(); err != nil {
-	        os.Exit(1)
-	    }
+		if err := scanner.Err(); err != nil {
+			os.Exit(1)
+		}
 	} else {
 		var activeObjects sync.WaitGroup
 		threads := make(chan bool, 3)
 		for _, arg := range extra {
 			activeObjects.Add(1)
-			threads<-true
-			go func(object string){
+			threads <- true
+			go func(object string) {
 				createScanObjects(object)
 				<-threads
 				activeObjects.Done()

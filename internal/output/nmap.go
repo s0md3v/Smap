@@ -28,7 +28,7 @@ func ContinueNmap(result g.Output) {
 	longestService := 7
 	for _, port := range result.Ports {
 		strPort := strconv.Itoa(port.Port)
-		if len(strPort) + 4 > longestPort {
+		if len(strPort)+4 > longestPort {
 			longestPort = len(strPort) + 4
 		}
 		if len(port.Service) > longestService {
@@ -46,7 +46,7 @@ func ContinueNmap(result g.Output) {
 	} else {
 		thisOutput += fmt.Sprintf("Nmap scan report for %s\nHost is up.\n\n", result.IP)
 	}
-	thisOutput += fmt.Sprintf("PORT %sSTATE SERVICE %sVERSION\n", pad("", longestPort - 4), pad(" ", longestService - 7))
+	thisOutput += fmt.Sprintf("PORT %sSTATE SERVICE %sVERSION\n", pad("", longestPort-4), pad(" ", longestService-7))
 	for _, port := range result.Ports {
 		strPort := fmt.Sprintf("%d/%s", port.Port, port.Protocol)
 		productLine := ""
@@ -59,7 +59,7 @@ func ContinueNmap(result g.Output) {
 				fmt.Sprintf(" ((%s))", result.OS.Name)
 			}
 		}
-		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort - len(strPort) + 1), port.Service, pad(productLine, longestService - len(port.Service) + 2))
+		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort-len(strPort)+1), port.Service, pad(productLine, longestService-len(port.Service)+2))
 	}
 	if value, ok := g.Args["oN"]; ok {
 		Write(thisOutput, value)

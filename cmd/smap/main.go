@@ -4,6 +4,6 @@ import (
 	"github.com/s0md3v/smap/internal/core"
 )
 
-func main(){
-	core.Init()	
+func main() {
+	core.Init()
 }

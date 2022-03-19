@@ -35,25 +35,25 @@ func EndXML() {
 	Write(fmt.Sprintf(`<runstats><finished time="%d" timestr="%s" elapsed="%s" summary="Nmap done at %s; %d IP addresses (%d hosts up) scanned in %s seconds" exit="success"/><hosts up="%d" down="%d" total="%d"/>
 </runstats>
 </nmaprun>
-`, g.ScanEndTime.Unix(), timestr, elapsed, timestr, g.TotalHosts, g.AliveHosts, elapsed, g.AliveHosts, g.TotalHosts - g.AliveHosts, g.TotalHosts), g.XmlFilename)
+`, g.ScanEndTime.Unix(), timestr, elapsed, timestr, g.TotalHosts, g.AliveHosts, elapsed, g.AliveHosts, g.TotalHosts-g.AliveHosts, g.TotalHosts), g.XmlFilename)
 }
 
 func portToXML(port g.Port, result g.Output) string {
 	thisString := fmt.Sprintf(`<port protocol="%s" portid="%d"><state state="open" reason="syn-ack" reason_ttl="0"/>`, port.Protocol, port.Port)
-	if port.Service != ""{
+	if port.Service != "" {
 		thisString += fmt.Sprintf(`<service name="%s"`, port.Service)
-		if port.Product != ""{
+		if port.Product != "" {
 			thisString += fmt.Sprintf(` product="%s"`, port.Product)
 		}
-		if port.Version != ""{
+		if port.Version != "" {
 			thisString += fmt.Sprintf(` version="%s"`, port.Version)
 		}
-		if port.Product != ""{
+		if port.Product != "" {
 			thisString += fmt.Sprintf(` product="%s"`, port.Product)
 		}
-		if result.OS.Port == port.Port{
+		if result.OS.Port == port.Port {
 			thisString += fmt.Sprintf(` ostype="%s" method="probed" conf="8">`, result.OS.Name)
-		} else if strings.HasSuffix(port.Service, "?"){
+		} else if strings.HasSuffix(port.Service, "?") {
 			thisString += ` method="table" conf="3">`
 		} else {
 			thisString += ` method="probed" conf="8">`
@@ -72,7 +72,7 @@ func ContinueXML(result g.Output) {
 <address addr="%s" addrtype="ipv4"/>
 <hostnames>
 `, result.Start.Unix(), result.End.Unix(), result.IP)
-	for _, hostname := range result.Hostnames{
+	for _, hostname := range result.Hostnames {
 		thisOutput += fmt.Sprintf("<hostname name=\"%s\" type=\"PTR\"/>\n", hostname)
 	}
 	if result.UHostname != "" {
