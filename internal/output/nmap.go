@@ -61,6 +61,7 @@ func ContinueNmap(result g.Output) {
 		}
 		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort-len(strPort)+1), port.Service, pad(productLine, longestService-len(port.Service)+2))
 	}
+	thisOutput += "\n"
 	if value, ok := g.Args["oN"]; ok {
 		Write(thisOutput, value)
 	} else {
@@ -70,7 +71,7 @@ func ContinueNmap(result g.Output) {
 
 func EndNmap() {
 	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
-	footer := "\nService detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n"
+	footer := "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n"
 	if value, ok := g.Args["oN"]; ok {
 		endstr := ConvertTime(g.ScanEndTime, "nmap-file")
 		plural := ""
