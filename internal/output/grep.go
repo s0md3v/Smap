@@ -12,7 +12,9 @@ import (
 var openedGrepFile *os.File
 
 func StartGrep() {
-	openedGrepFile = OpenFile(g.GrepFilename)
+	if g.GrepFilename != "-" {
+		openedGrepFile = OpenFile(g.GrepFilename)
+	}
 	startstr := ConvertTime(g.ScanStartTime, "nmap-file")
 	Write(fmt.Sprintf("# Nmap 9.99 scan initiated %s as: %s\n", startstr, GetCommand()), g.GrepFilename, openedGrepFile)
 }

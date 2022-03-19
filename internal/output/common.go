@@ -8,7 +8,7 @@ import (
 )
 
 func GetCommand() string {
-	return "nmap" + strings.Join(os.Args[1:], " ")
+	return "nmap " + strings.Join(os.Args[1:], " ")
 }
 
 func ConvertTime(unixTime time.Time, format string) string {

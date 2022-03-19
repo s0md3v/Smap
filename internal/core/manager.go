@@ -23,6 +23,7 @@ var (
 	activeScans    sync.WaitGroup
 	activeOutputs  sync.WaitGroup
 	activeEnders   sync.WaitGroup
+	activeObjects sync.WaitGroup
 	targetsChannel = make(chan scanObject, 3)
 	outputChannel  = make(chan g.Output, 1000)
 	reAddressRange = regexp.MustCompile(`^\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?$`)
@@ -151,16 +152,14 @@ func handleOutput() {
 
 func scanner() {
 	threads := make(chan bool, 3)
-	g.ScanStartTime = time.Now()
 	for target := range targetsChannel {
 		threads <- true
-		go func() {
+		go func(target scanObject) {
 			processScanObject(target)
 			activeScans.Done()
 			<-threads
-		}()
+		}(target)
 	}
-	g.ScanEndTime = time.Now()
 }
 
 func createScanObjects(object string) {
@@ -195,6 +194,8 @@ func processScanObject(object scanObject) {
 	var output g.Output
 	if len(response) < 50 {
 		return
+	} else {
+		activeOutputs.Add(1)
 	}
 	var data respone
 	json.Unmarshal(response, &data)
@@ -220,7 +221,6 @@ func processScanObject(object scanObject) {
 	output.Start = scanStarted
 	output.End = time.Now()
 	g.Increment(1)
-	activeOutputs.Add(1)
 	outputChannel <- output
 }
 
@@ -232,9 +232,10 @@ func Init() {
 	g.Args = args
 	json.Unmarshal(db.NmapSigs, &Probes)
 	json.Unmarshal(db.NmapTable, &Table)
+	g.PortList = getPorts()
+	g.ScanStartTime = time.Now()
 	go scanner()
 	go handleOutput()
-	g.PortList = getPorts()
 	if value, ok := g.Args["iL"]; ok {
 		file, err := os.Open(value)
 		if err != nil {
@@ -251,7 +252,6 @@ func Init() {
 			os.Exit(1)
 		}
 	} else {
-		var activeObjects sync.WaitGroup
 		threads := make(chan bool, 3)
 		for _, arg := range extra {
 			activeObjects.Add(1)
@@ -266,6 +266,7 @@ func Init() {
 	}
 	activeScans.Wait()
 	close(targetsChannel)
+	g.ScanEndTime = time.Now()
 	activeOutputs.Wait()
 	close(outputChannel)
 	activeEnders.Wait()
