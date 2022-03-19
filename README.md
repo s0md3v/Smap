@@ -83,7 +83,7 @@ smap -p21-30,80,443 -iL targets.txt
 ```
 
 ## Considerations
-Since SMap simply fetches existent port data from shodan.io, it is super fast and doesn't. You should use Smap if:
+Since Smap simply fetches existent port data from shodan.io, it is super fast but there's more to it. You should use Smap if:
 
 #### You want
 - vulnerability detection
