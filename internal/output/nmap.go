@@ -51,6 +51,7 @@ func ContinueNmap(result g.Output) {
 		thisOutput += fmt.Sprintf("Nmap scan report for %s\nHost is up.\n\n", result.IP)
 	}
 	thisOutput += fmt.Sprintf("PORT %sSTATE SERVICE %sVERSION\n", pad("", longestPort-4), pad(" ", longestService-7))
+	serviceString := ""
 	for _, port := range result.Ports {
 		strPort := fmt.Sprintf("%d/%s", port.Port, port.Protocol)
 		productLine := ""
@@ -59,12 +60,22 @@ func ContinueNmap(result g.Output) {
 			if port.Version != "" {
 				productLine += " " + port.Version
 			}
-			if result.OS.Name != "" && result.OS.Port == port.Port {
-				fmt.Sprintf(" ((%s))", result.OS.Name)
-			}
 		}
 		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort-len(strPort)+1), port.Service, pad(productLine, longestService-len(port.Service)+2))
+		if result.OS.Name != "" && result.OS.Port == port.Port {
+			serviceString += fmt.Sprintf("Service Info: OS: %s", result.OS.Name)
+			if len(result.OS.Cpes) > 0 {
+				for _, cpe := range result.OS.Cpes {
+					if strings.Contains(cpe, strings.ToLower(result.OS.Name)) {
+						serviceString += fmt.Sprintf("; CPE: %s", cpe)
+						break
+					}
+				}
+			}
+			serviceString += "\n"
+		}
 	}
+	thisOutput += serviceString
 	thisOutput += "\n"
 	if value, ok := g.Args["oN"]; ok {
 		Write(thisOutput, value, openedNmapFile)

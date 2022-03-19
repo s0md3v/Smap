@@ -26,6 +26,7 @@ var (
 	XmlFilename   string
 	GrepFilename  string
 	NmapFilename  string
+	JsonFilename  string
 	Args          map[string]string
 	TotalHosts    count32
 	AliveHosts    count32

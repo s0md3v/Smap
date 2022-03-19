@@ -98,6 +98,7 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"oS":                  false,
 	"oG":                  false,
 	"oA":                  false,
+	"oJ":                  false,
 	"v":                   true,
 	"d":                   true,
 	"reason":              true,

@@ -23,10 +23,11 @@ func containsInt(array []int, item int) bool {
 	return false
 }
 
-func Correlate(ports []int, cpes []string) []g.Port {
+func Correlate(ports []int, cpes []string) ([]g.Port, g.OS) {
 	contenders := map[int]g.Contender{}
 	used_cpes := map[string]int{}
 	result := []g.Port{}
+	var thisOS g.OS
 	duplicateMap := map[string][]int{} // {joined_cpe: [score, port]}
 	for _, service := range Probes {
 		cpeMatched := false
@@ -66,6 +67,7 @@ func Correlate(ports []int, cpes []string) []g.Port {
 				tempContender.Score += 2
 				tempContender.Ssl = true
 			}
+			println(tempContender.Product, tempContender.Score, contenders[port].Score)
 			if tempContender.Score > contenders[port].Score {
 				failed := false
 				for _, cpe := range tempContender.Cpes {
@@ -89,6 +91,16 @@ func Correlate(ports []int, cpes []string) []g.Port {
 					}
 				} else {
 					duplicateMap[joinedCpes] = []int{tempContender.Score, port}
+				}
+				if tempContender.OS != "" {
+					thisOS.Port = port
+					thisOS.Name = tempContender.OS
+					thisOS.Cpes = []string{}
+					for _, cpe := range tempContender.Cpes {
+						if strings.HasPrefix(cpe, "cpe:/o") {
+							thisOS.Cpes = append(thisOS.Cpes, cpe)
+						}
+					}
 				}
 				tempContender.Ports = []int{}
 				tempContender.Sslports = []int{}
@@ -139,5 +151,5 @@ func Correlate(ports []int, cpes []string) []g.Port {
 		dummyPort.Protocol = "tcp"
 		result = append(result, dummyPort)
 	}
-	return result
+	return result, thisOS
 }

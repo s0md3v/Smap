@@ -11,7 +11,7 @@ type Contender struct {
 	Softmatch  bool     `json:"softmatch"`
 	Product    string   `json:"product,omitempty"`
 	Heuristic  []int    `json:"heuristic,omitempty"`
-	Os         string   `json:"os,omitempty"`
+	OS         string   `json:"os,omitempty"`
 	Devicetype string   `json:"devicetype,omitempty"`
 	Ports      []int    `json:"ports,omitempty"`
 	Sslports   []int    `json:"sslports,omitempty"`
@@ -19,20 +19,21 @@ type Contender struct {
 	Score      int      `json:"score,omitempty"`
 }
 
+type OS struct {
+	Name string   `json:"name"`
+	Cpes []string `json:"cpes"`
+	Port int      `json:"port"`
+}
 type Output struct {
-	IP        string   `json:"ip"`
-	Hostnames []string `json:"hostnames"`
-	UHostname string   `json:"user_hostname"`
-	Ports     []Port   `json:"ports"`
-	Tags      []string `json:"tags"`
-	Vulns     []string `json:"vulns"`
-	Start     time.Time
-	End       time.Time
-	OS        struct {
-		Name string `json:"name"`
-		Cpe  string `json:"name"`
-		Port int    `json:"port"`
-	} `json:"os"`
+	IP        string    `json:"ip"`
+	Hostnames []string  `json:"hostnames"`
+	UHostname string    `json:"user_hostname,omitempty"`
+	Ports     []Port    `json:"ports"`
+	Tags      []string  `json:"tags,omitempty"`
+	Vulns     []string  `json:"vulns,omitempty"`
+	Start     time.Time `json:"start_time"`
+	End       time.Time `json:"end_time"`
+	OS        OS        `json:"os,omitempty"`
 }
 
 type Port struct {

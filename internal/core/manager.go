@@ -130,6 +130,11 @@ func handleOutput() {
 		continueOutput = []func(g.Output){o.ContinueGrep}
 		endOutput = []func(){o.EndGrep}
 		g.GrepFilename = value
+	}  else if value, ok := g.Args["oJ"]; ok {
+		startOutput = []func(){o.StartJson}
+		continueOutput = []func(g.Output){o.ContinueJson}
+		endOutput = []func(){o.EndJson}
+		g.JsonFilename = value
 	} else {
 		startOutput = []func(){o.StartNmap}
 		continueOutput = []func(g.Output){o.ContinueNmap}
@@ -217,7 +222,7 @@ func processScanObject(object scanObject) {
 	} else {
 		filteredPorts = data.Ports
 	}
-	output.Ports = Correlate(filteredPorts, data.Cpes)
+	output.Ports, output.OS = Correlate(filteredPorts, data.Cpes)
 	output.Start = scanStarted
 	output.End = time.Now()
 	g.Increment(1)
@@ -237,13 +242,15 @@ func Init() {
 	go scanner()
 	go handleOutput()
 	if value, ok := g.Args["iL"]; ok {
-		file, err := os.Open(value)
-		if err != nil {
-			os.Exit(1)
+		scanner := bufio.NewScanner(os.Stdin)
+		if value != "-" {
+			file, err := os.Open(value)
+			if err != nil {
+				os.Exit(1)
+			}
+			defer file.Close()
+			scanner = bufio.NewScanner(file)
 		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			createScanObjects(scanner.Text())
 		}
