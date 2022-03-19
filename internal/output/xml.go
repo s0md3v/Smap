@@ -32,15 +32,6 @@ func StartXML() {
 `, startstr, GetCommand(), GetCommand(), g.ScanStartTime.Unix(), startstr, portsLen, portsStr), g.XmlFilename, openedXmlFile)
 }
 
-func EndXML() {
-	timestr := ConvertTime(g.ScanEndTime, "nmap-file")
-	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
-	Write(fmt.Sprintf(`<runstats><finished time="%d" timestr="%s" elapsed="%s" summary="Nmap done at %s; %d IP addresses (%d hosts up) scanned in %s seconds" exit="success"/><hosts up="%d" down="%d" total="%d"/>
-</runstats>
-</nmaprun>
-`, g.ScanEndTime.Unix(), timestr, elapsed, timestr, g.TotalHosts, g.AliveHosts, elapsed, g.AliveHosts, g.TotalHosts-g.AliveHosts, g.TotalHosts), g.XmlFilename, openedXmlFile)
-}
-
 func portToXML(port g.Port, result g.Output) string {
 	thisString := fmt.Sprintf(`<port protocol="%s" portid="%d"><state state="open" reason="syn-ack" reason_ttl="0"/>`, port.Protocol, port.Port)
 	if port.Service != "" {
@@ -87,5 +78,14 @@ func ContinueXML(result g.Output) {
 	}
 	thisOutput += "</ports>\n<times srtt=\"247120\" rttvar=\"185695\" to=\"989900\"/>\n</host>\n"
 	Write(thisOutput, g.XmlFilename, openedXmlFile)
+}
+
+func EndXML() {
+	timestr := ConvertTime(g.ScanEndTime, "nmap-file")
+	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
+	Write(fmt.Sprintf(`<runstats><finished time="%d" timestr="%s" elapsed="%s" summary="Nmap done at %s; %d IP addresses (%d hosts up) scanned in %s seconds" exit="success"/><hosts up="%d" down="%d" total="%d"/>
+</runstats>
+</nmaprun>
+`, g.ScanEndTime.Unix(), timestr, elapsed, timestr, g.TotalHosts, g.AliveHosts, elapsed, g.AliveHosts, g.TotalHosts-g.AliveHosts, g.TotalHosts), g.XmlFilename, openedXmlFile)
 	defer openedXmlFile.Close()
 }
