@@ -232,7 +232,11 @@ func processScanObject(object scanObject) {
 func Init() {
 	args, extra, invalid := ParseArgs()
 	if invalid {
+		fmt.Println("One or more of your arguments are invalid. Refer to docs.\nQUITTING!")
 		os.Exit(1)
+	} else if _, ok := args["h"]; ok {
+		fmt.Print(db.HelpText)
+		os.Exit(0)
 	}
 	g.Args = args
 	json.Unmarshal(db.NmapSigs, &Probes)
@@ -258,7 +262,7 @@ func Init() {
 		if err := scanner.Err(); err != nil {
 			os.Exit(1)
 		}
-	} else {
+	} else if len(extra) != 0 {
 		threads := make(chan bool, 3)
 		for _, arg := range extra {
 			activeObjects.Add(1)
@@ -270,6 +274,8 @@ func Init() {
 			}(arg)
 		}
 		activeObjects.Wait()
+	} else {
+		fmt.Println("WARNING: No targets were specified, so 0 hosts scanned.")
 	}
 	activeScans.Wait()
 	close(targetsChannel)
