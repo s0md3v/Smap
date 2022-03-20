@@ -99,6 +99,15 @@ func hostnameToIP(hostname string) string {
 	return ""
 }
 
+func incIP(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
+}
+
 func handleOutput() {
 	var (
 		startOutput    []func()
@@ -174,6 +183,17 @@ func createScanObjects(object string) {
 	if isIPv4(object) {
 		oneObject.IP = object
 		targetsChannel <- oneObject
+	} else if strings.Contains(object, "/") && isIPv4(strings.Split(object, "/")[0]) {
+		activeScans.Done()
+		ip, ipnet, err := net.ParseCIDR(object)
+		if err != nil {
+			return
+		}
+		for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incIP(ip) {
+			oneObject.IP = ip.String()
+			activeScans.Add(1)
+			targetsChannel <- oneObject
+		}
 	} else if isHostname(object) {
 		ip := hostnameToIP(object)
 		if ip != "" {
@@ -183,8 +203,6 @@ func createScanObjects(object string) {
 		} else {
 			activeScans.Done()
 		}
-	} else if isIPv4(strings.Split(object, "/")[0]) {
-		targetsChannel <- oneObject
 	} else if isAddressRange(object) {
 		return
 	} else {

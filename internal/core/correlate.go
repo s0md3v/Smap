@@ -67,7 +67,6 @@ func Correlate(ports []int, cpes []string) ([]g.Port, g.OS) {
 				tempContender.Score += 2
 				tempContender.Ssl = true
 			}
-			println(tempContender.Product, tempContender.Score, contenders[port].Score)
 			if tempContender.Score > contenders[port].Score {
 				failed := false
 				for _, cpe := range tempContender.Cpes {
