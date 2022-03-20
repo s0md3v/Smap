@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var reValidPair = regexp.MustCompile(`^([-]{1,2}[A-Za-z-]+)?(\d.*)?`)
+var reValidPair = regexp.MustCompile(`^([-]{1,2}[A-Za-z-]+)(\d.*)?`)
 
 var validArgs = map[string]bool{ // name : is_boolean_type
 	"iL":                  false,
@@ -179,8 +179,10 @@ func ParseArgs() (map[string]string, []string, bool) {
 				argPair[cleaned] = ""
 			} else if action == 2 {
 				extra = append(extra, cleaned)
+			}  else if action == -1 {
+				return argPair, extra, true
 			}
-			lastArg = thisArgName
+			lastArg = cleaned
 			lastAction = action
 			continue
 		}
