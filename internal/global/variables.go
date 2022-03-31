@@ -27,7 +27,10 @@ var (
 	GrepFilename  string
 	NmapFilename  string
 	JsonFilename  string
+	SmapFilename  string
+	PairFilename  string
 	Args          map[string]string
 	TotalHosts    count32
 	AliveHosts    count32
+	Version       = "0.1.0-beta"
 )

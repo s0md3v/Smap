@@ -1,8 +1,8 @@
 package output
 
 import (
-	"os"
 	"encoding/json"
+	"os"
 
 	g "github.com/s0md3v/smap/internal/global"
 )
@@ -17,14 +17,14 @@ func StartJson() {
 	Write("[", g.JsonFilename, openedJsonFile)
 }
 
-func ContinueJson(output g.Output) {
+func ContinueJson(result g.Output) {
 	prefix := ""
 	if firstDone {
 		prefix = ","
 	}
 	firstDone = true
-	jsoned , _ := json.Marshal(&output)
-	Write(prefix + string(jsoned), g.JsonFilename, openedJsonFile)
+	jsoned, _ := json.Marshal(&result)
+	Write(prefix+string(jsoned), g.JsonFilename, openedJsonFile)
 }
 
 func EndJson() {

@@ -23,7 +23,7 @@ var (
 	activeScans    sync.WaitGroup
 	activeOutputs  sync.WaitGroup
 	activeEnders   sync.WaitGroup
-	activeObjects sync.WaitGroup
+	activeObjects  sync.WaitGroup
 	targetsChannel = make(chan scanObject, 3)
 	outputChannel  = make(chan g.Output, 1000)
 	reAddressRange = regexp.MustCompile(`^\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?$`)
@@ -139,11 +139,21 @@ func handleOutput() {
 		continueOutput = []func(g.Output){o.ContinueGrep}
 		endOutput = []func(){o.EndGrep}
 		g.GrepFilename = value
-	}  else if value, ok := g.Args["oJ"]; ok {
+	} else if value, ok := g.Args["oJ"]; ok {
 		startOutput = []func(){o.StartJson}
 		continueOutput = []func(g.Output){o.ContinueJson}
 		endOutput = []func(){o.EndJson}
 		g.JsonFilename = value
+	} else if value, ok := g.Args["oS"]; ok {
+		startOutput = []func(){o.StartSmap}
+		continueOutput = []func(g.Output){o.ContinueSmap}
+		endOutput = []func(){o.EndSmap}
+		g.SmapFilename = value
+	}  else if value, ok := g.Args["oP"]; ok {
+		startOutput = []func(){o.StartPair}
+		continueOutput = []func(g.Output){o.ContinuePair}
+		endOutput = []func(){o.EndPair}
+		g.PairFilename = value
 	} else {
 		startOutput = []func(){o.StartNmap}
 		continueOutput = []func(g.Output){o.ContinueNmap}
