@@ -10,6 +10,9 @@ import (
 var openedPairFile *os.File
 
 func StartPair() {
+	if g.PairFilename != "-" {
+		openedPairFile = OpenFile(g.PairFilename)
+	}
 }
 
 func ContinuePair(result g.Output) {

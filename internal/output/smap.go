@@ -11,6 +11,9 @@ import (
 var openedSmapFile *os.File
 
 func StartSmap() {
+	if g.SmapFilename != "-" {
+		openedSmapFile = OpenFile(g.SmapFilename)
+	}
 	Write(fmt.Sprintf("\n\tSmap (%s)\n", g.Version), g.SmapFilename, openedSmapFile)
 }
 
