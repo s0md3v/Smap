@@ -262,7 +262,7 @@ func Init() {
 	if invalid {
 		fmt.Println("One or more of your arguments are invalid. Refer to docs.\nQUITTING!")
 		os.Exit(1)
-	} else if _, ok := args["h"]; ok {
+	} else if _, ok := args["h"]; ok || len(os.Args) == 1 {
 		fmt.Print(db.HelpText)
 		os.Exit(0)
 	}
