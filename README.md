@@ -56,7 +56,6 @@ smap -iL targets.txt
 1.1.1.1         // IPv4 address
 example.com     // hostname
 178.23.56.0/8   // CIDR
-1.1.1.12-87     // Range
 ```
 
 ### Output
@@ -69,11 +68,15 @@ If you want to print the output to terminal, use hyphen (`-`) as filename.
 
 **Supported formats**
 ```
-oX    // xml
-oG    // greppable format
-oN    // nmap format
-oA    // output in all 3 formats at once
+oX    // nmap's xml format
+oG    // nmap's greppable format
+oN    // nmap's default format
+oA    // output in all 3 formats above at once
+oP    // IP:PORT pairs seperated by newlines
+oS    // custom smap format
 ```
+
+> Note: Since Nmap doesn't scan/display vulnerabilities and tags, that data is not available in nmap's formats. Use `-oS` to view that info.
 
 ### Specifying ports
 SMap scans these [1237 ports](https://api.shodan.io/shodan/ports) by default. If you want to display results for certain ports, use the `-p` option.
