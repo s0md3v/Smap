@@ -24,7 +24,7 @@
 
 ---
 
-Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It takes same command line arguments as Nmap and proudces the same output which makes it a drop-in replacament for Nmap.
+Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It takes same command line arguments as Nmap and produces the same output which makes it a drop-in replacament for Nmap.
 
 ## Features
 - Scans 200 hosts per second
@@ -44,7 +44,7 @@ Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, 
 
 ### Specifying targets
 ```
-smap -sV 127.0.0.1 127.0.0.2
+smap 127.0.0.1 127.0.0.2
 ```
 You can also use a list of targets, seperated by newlines.
 ```
@@ -59,8 +59,7 @@ example.com     // hostname
 ```
 
 ### Output
-SMap supports Nmap's 3 major output formats
-
+Smap supports 6 output formats which can be used with the `-o* ` as follows
 ```
 smap example.com -oX output.xml
 ```
@@ -74,12 +73,13 @@ oN    // nmap's default format
 oA    // output in all 3 formats above at once
 oP    // IP:PORT pairs seperated by newlines
 oS    // custom smap format
+oJ    // json
 ```
 
 > Note: Since Nmap doesn't scan/display vulnerabilities and tags, that data is not available in nmap's formats. Use `-oS` to view that info.
 
 ### Specifying ports
-SMap scans these [1237 ports](https://api.shodan.io/shodan/ports) by default. If you want to display results for certain ports, use the `-p` option.
+Smap scans these [1237 ports](https://api.shodan.io/shodan/ports) by default. If you want to display results for certain ports, use the `-p` option.
 
 ```
 smap -p21-30,80,443 -iL targets.txt
