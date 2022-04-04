@@ -39,6 +39,13 @@ Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It 
 go install -v github.com/s0md3v/smap/cmd/smap@latest
 ```
 
+**'go' command not found**
+1. [Install "golang"](https://go.dev/doc/install) 
+2. Verify the installation by typing `smap` in your terminal
+3. If you are on linux and get a 'smap not found' error, add the following line anywhere in the `~/.profile` file
+
+`export PATH=$PATH:/usr/local/go/bin`
+
 ## Usage
 Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
 
