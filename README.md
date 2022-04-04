@@ -46,6 +46,14 @@ go install -v github.com/s0md3v/smap/cmd/smap@latest
 
 `export PATH=$PATH:/usr/local/go/bin`
 
+### Arch/AUR
+Smap is avaible on the [AUR](https://aur.archlinux.org/packages/smap-git)
+This can be installed by an AUR-helper.
+
+```
+yay -S smap-git
+```
+
 ## Usage
 Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
 
