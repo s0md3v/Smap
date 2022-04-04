@@ -28,31 +28,19 @@ Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It 
 
 ## Features
 - Scans 200 hosts per second
+- Doesn't require any account/api key
 - Vulnerability detection
 - Supports all nmap's output formats
 - Service and version fingerprinting
 - Makes no contact to the targets
-- Doesn't require any account/api key
 
 ## Installation
-```
-go install -v github.com/s0md3v/smap/cmd/smap@latest
-```
+### Manual
+`go install -v github.com/s0md3v/smap/cmd/smap@latest`
 
-**'go' command not found**
-1. [Install "golang"](https://go.dev/doc/install) 
-2. Verify the installation by typing `smap` in your terminal
-3. If you are on linux and get a 'smap not found' error, add the following line anywhere in the `~/.profile` file
-
-`export PATH=$PATH:/usr/local/go/bin`
-
-### Arch/AUR
-Smap is avaible on the [AUR](https://aur.archlinux.org/packages/smap-git)
-This can be installed by an AUR-helper.
-
-```
-yay -S smap-git
-```
+Confused? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
+### AUR pacakge
+Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git).
 
 ## Usage
 Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
