@@ -41,7 +41,7 @@ Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It 
 
 Confused or something not working? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
 ### AUR pacakge
-Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git).
+Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git) (builds from source) and [smap-bin](https://aur.archlinux.org/packages/smap-bin) (pre-built binary).
 
 ## Usage
 Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
