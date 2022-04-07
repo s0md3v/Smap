@@ -1,0 +1,48 @@
+project_name: smap
+builds:
+  - main: .
+    binary: smap
+    dir: ./cmd/smap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - mips
+    goarm:
+        - 7
+    ignore:
+      - goos: freebsd
+        goarch: arm
+      - goos: freebsd
+        goarch: arm64
+      - goos: freebsd
+        goarch: mips
+      - goos: windows
+        goarch: arm
+        goarm: 7
+      - goos: windows
+        goarch: arm64
+      - goos: linux
+        goarch: mips
+
+archives:
+    - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ .Arm }}"
+      format: tar.xz
+      format_overrides:
+        - goos: windows
+          format: zip
+      replacements:
+          darwin: macOS
+      wrap_in_directory: true
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}--sha256_checksums.txt"
+release:
+  draft: true
+
