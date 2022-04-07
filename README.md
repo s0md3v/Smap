@@ -35,10 +35,11 @@ Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It 
 - Makes no contact to the targets
 
 ## Installation
+
 ### Manual
 `go install -v github.com/s0md3v/smap/cmd/smap@latest`
 
-Confused? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
+Confused or something not working? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
 ### AUR pacakge
 Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git).
 
