@@ -35,6 +35,8 @@ Smap is a replica of Nmap which uses shodan.io's free API for port scanning. It 
 - Makes no contact to the targets
 
 ## Installation
+### Binaries
+You can download a pre-built binary from [here](https://github.com/s0md3v/Smap/releases) and use it right away.
 
 ### Manual
 `go install -v github.com/s0md3v/smap/cmd/smap@latest`
