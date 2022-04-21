@@ -44,9 +44,6 @@ func portToXML(port g.Port, result g.Output) string {
 		if port.Version != "" {
 			thisString += fmt.Sprintf(` version="%s"`, port.Version)
 		}
-		if port.Product != "" {
-			thisString += fmt.Sprintf(` product="%s"`, port.Product)
-		}
 		if result.OS.Port == port.Port {
 			thisString += fmt.Sprintf(` ostype="%s" method="probed" conf="8">`, result.OS.Name)
 		} else if strings.HasSuffix(port.Service, "?") {
@@ -57,8 +54,9 @@ func portToXML(port g.Port, result g.Output) string {
 		for _, cpe := range port.Cpes {
 			thisString += fmt.Sprintf(`<cpe>%s</cpe>`, cpe)
 		}
-		thisString += "</service></port>\n"
+		thisString += "</service>"
 	}
+	thisString += "</port>\n"
 	return thisString
 }
 
