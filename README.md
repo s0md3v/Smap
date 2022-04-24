@@ -20,7 +20,7 @@
   </a>
 </p>
 
-<p align="center"><img src="/static/smap-demo.png" alt="Smap demo" style:"border-radius:16px;"></p>
+<p align="center"><img src="/static/smap-demo.png" alt="Smap demo" height="auto" width="auto"></p>
 
 ---
 
@@ -73,13 +73,13 @@ If you want to print the output to terminal, use hyphen (`-`) as filename.
 
 **Supported formats**
 ```
-oX    // nmap's xml format
-oG    // nmap's greppable format
-oN    // nmap's default format
-oA    // output in all 3 formats above at once
-oP    // IP:PORT pairs seperated by newlines
-oS    // custom smap format
-oJ    // json
+-oX    // nmap's xml format
+-oG    // nmap's greppable format
+-oN    // nmap's default format
+-oA    // output in all 3 formats above at once
+-oP    // IP:PORT pairs seperated by newlines
+-oS    // custom smap format
+-oJ    // json
 ```
 
 > Note: Since Nmap doesn't scan/display vulnerabilities and tags, that data is not available in nmap's formats. Use `-oS` to view that info.
