@@ -20,7 +20,7 @@
   </a>
 </p>
 
-<p align="center"><img src="/static/smap-demo.png" alt="Smap demo"></p>
+<p align="center"><img src="/static/smap-demo.png" alt="Smap demo" style:"border-radius:16px;"></p>
 
 ---
 
@@ -65,7 +65,7 @@ example.com     // hostname
 ```
 
 ### Output
-Smap supports 6 output formats which can be used with the `-o* ` as follows
+Smap supports 6 output formats which can be used with the `-o*` as follows
 ```
 smap example.com -oX output.xml
 ```
@@ -88,19 +88,19 @@ oJ    // json
 Smap scans these [1237 ports](https://gist.githubusercontent.com/s0md3v/3e953e8e15afebc1879a2245e74fc90f/raw/1e20288e9bef43b60f7306b6f7e23044dabd9b8c/shodan_ports.txt) by default. If you want to display results for certain ports, use the `-p` option.
 
 ```
-smap -p21-30,80,443 -iL targets.txt
+smap -p 21-30,80,443 -iL targets.txt
 ```
 
 ## Considerations
 Since Smap simply fetches existent port data from shodan.io, it is super fast but there's more to it. You should use Smap if:
 
 #### You want
-- vulnerability detection
-- a super fast port scanner
-- results for most common ports (top 1237)
-- no connections to be made to the targets
+- Vulnerability detection
+- A super fast port scanner
+- Results for most common ports (top 1237)
+- No connections to be made to the targets
 
 #### You are okay with
-- not being able to scan IPv6 addresses
-- results being up to 7 days old
-- a few false negatives
+- Not being able to scan IPv6 addresses
+- Results being up to 7 days old
+- A few false negatives
