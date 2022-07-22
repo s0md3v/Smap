@@ -45,6 +45,14 @@ Confused or something not working? For more detailed instructions, [click here](
 ### AUR pacakge
 Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git) (builds from source) and [smap-bin](https://aur.archlinux.org/packages/smap-bin) (pre-built binary).
 
+### Homebrew/Mac
+Smap is also avaible on [Homebrew](https://formulae.brew.sh/formula/smap).
+
+```
+brew update
+brew install smap
+```
+
 ## Usage
 Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
 
