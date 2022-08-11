@@ -12,7 +12,7 @@ var openedJsonFile *os.File
 
 func StartJson() {
 	if g.JsonFilename != "-" {
-		openedGrepFile = OpenFile(g.JsonFilename)
+		openedJsonFile = OpenFile(g.JsonFilename)
 	}
 	Write("[", g.JsonFilename, openedJsonFile)
 }
