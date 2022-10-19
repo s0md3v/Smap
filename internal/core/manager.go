@@ -60,6 +60,9 @@ func getPorts() []int {
 					for i := start; i < end; i++ {
 						thesePorts = append(thesePorts, i)
 					}
+				} else {
+					fmt.Fprint(os.Stderr, "' ' is not a valid port number.\nQUITTING!\n")
+					os.Exit(1)
 				}
 			} else if len(portList) == 1 {
 				intPort, err := strconv.Atoi(portList[0])
