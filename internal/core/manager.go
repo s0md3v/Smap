@@ -48,9 +48,30 @@ func getPorts() []int {
 	thesePorts := []int{}
 	if value, ok := g.Args["p"]; ok {
 		for _, port := range strings.Split(value, ",") {
-			intPort, err := strconv.Atoi(port)
-			if err == nil && intPort >= 0 && intPort <= 65535 {
-				thesePorts = append(thesePorts, intPort)
+			portList := strings.Split(port, "-")
+			if len(portList) == 2 {
+				start, err := strconv.Atoi(portList[0])
+				if err != nil {
+					fmt.Fprint(os.Stderr, "' ' is not a valid port number.\nQUITTING!\n")
+					os.Exit(1)
+				}
+				end, err := strconv.Atoi(portList[1])
+				if err == nil && start >= 0 && start <= end && end <= 65535 {
+					for i := start; i < end; i++ {
+						thesePorts = append(thesePorts, i)
+					}
+				} else {
+					fmt.Fprint(os.Stderr, "' ' is not a valid port number.\nQUITTING!\n")
+					os.Exit(1)
+				}
+			} else if len(portList) == 1 {
+				intPort, err := strconv.Atoi(portList[0])
+				if err == nil && intPort >= 0 && intPort <= 65535 {
+					thesePorts = append(thesePorts, intPort)
+				} else {
+					fmt.Fprint(os.Stderr, "' ' is not a valid port number.\nQUITTING!\n")
+					os.Exit(1)
+				}
 			} else {
 				fmt.Fprint(os.Stderr, "' ' is not a valid port number.\nQUITTING!\n")
 				os.Exit(1)
@@ -149,7 +170,7 @@ func handleOutput() {
 		continueOutput = []func(g.Output){o.ContinueSmap}
 		endOutput = []func(){o.EndSmap}
 		g.SmapFilename = value
-	}  else if value, ok := g.Args["oP"]; ok {
+	} else if value, ok := g.Args["oP"]; ok {
 		startOutput = []func(){o.StartPair}
 		continueOutput = []func(g.Output){o.ContinuePair}
 		endOutput = []func(){o.EndPair}
