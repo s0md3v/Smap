@@ -57,7 +57,7 @@ func getPorts() []int {
 				}
 				end, err := strconv.Atoi(portList[1])
 				if err == nil && start >= 0 && start <= end && end <= 65535 {
-					for i := start; i < end; i++ {
+					for i := start; i <= end; i++ {
 						thesePorts = append(thesePorts, i)
 					}
 				} else {
@@ -264,9 +264,6 @@ func processScanObject(object scanObject) {
 			if containsInt(object.Ports, port) {
 				filteredPorts = append(filteredPorts, port)
 			}
-		}
-		if len(filteredPorts) == 0 {
-			return
 		}
 	} else {
 		filteredPorts = data.Ports
