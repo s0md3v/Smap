@@ -32,5 +32,5 @@ var (
 	Args          map[string]string
 	TotalHosts    count32
 	AliveHosts    count32
-	Version       = "0.1.2"
+	Version       = "0.1.12"
 )
