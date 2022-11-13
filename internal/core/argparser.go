@@ -171,14 +171,13 @@ func ParseArgs() (map[string]string, []string, bool) {
 			}
 			cleaned, action := whatToDo(thisArgName, lastAction)
 			if action == 1 {
-				if groups != nil {
+				if len(groups) == 3 && groups[2] != "" {
 					argPair[cleaned] = groups[2]
+					lastAction = 0
+					continue
 				} else {
 					argPair[cleaned] = strings.Replace(token, thisArgName+"=", "", 1)
 				}
-				lastArg = cleaned
-				lastAction = 0
-				continue
 			} else if action == 0 {
 				argPair[cleaned] = ""
 			} else if action == 2 {
@@ -202,7 +201,7 @@ func ParseArgs() (map[string]string, []string, bool) {
 		}
 		lastAction = action
 	}
-	if lastAction == 1 {
+	if lastAction == 1 && len(argPair) < 1 {
 		return argPair, extra, true
 	}
 	return argPair, extra, false
