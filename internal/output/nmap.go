@@ -50,6 +50,9 @@ func ContinueNmap(result g.Output) {
 	} else {
 		thisOutput += fmt.Sprintf("Nmap scan report for %s\nHost is up.\n\n", result.IP)
 	}
+	if len(result.Ports) == 0 {
+		return
+	}
 	thisOutput += fmt.Sprintf("PORT %sSTATE SERVICE %sVERSION\n", pad("", longestPort-4), pad(" ", longestService-7))
 	serviceString := ""
 	for _, port := range result.Ports {
@@ -82,11 +85,11 @@ func ContinueNmap(result g.Output) {
 	} else {
 		Write(thisOutput, "-", openedNmapFile)
 	}
+	Write(thisOutput, "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n", openedNmapFile)
 }
 
 func EndNmap() {
 	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
-	footer := "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n"
 	esTotal := ""
 	if g.TotalHosts > 1 {
 		esTotal = "es"
@@ -95,6 +98,7 @@ func EndNmap() {
 	if g.AliveHosts > 1 {
 		sAlive = "s"
 	}
+	footer := ""
 	if value, ok := g.Args["oN"]; ok {
 		endstr := ConvertTime(g.ScanEndTime, "nmap-file")
 		footer += fmt.Sprintf("# Nmap done at %s -- %d IP address%s (%d host%s up) scanned in %s seconds\n", endstr, g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
