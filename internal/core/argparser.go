@@ -176,6 +176,9 @@ func ParseArgs() (map[string]string, []string, bool) {
 				} else {
 					argPair[cleaned] = strings.Replace(token, thisArgName+"=", "", 1)
 				}
+				lastArg = cleaned
+				lastAction = 0
+				continue
 			} else if action == 0 {
 				argPair[cleaned] = ""
 			} else if action == 2 {
