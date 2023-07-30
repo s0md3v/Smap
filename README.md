@@ -24,7 +24,7 @@
 
 ---
 
-Smap is a port scanner built with shodan.io's free API. It takes same command line arguments as Nmap and produces the same output which makes it a drop-in replacament for Nmap.
+Smap is a port scanner built with shodan.io's free API. It takes same command line arguments as Nmap and produces the same output which makes it a drop-in replacement for Nmap.
 
 ## Features
 - Scans 200 hosts per second
