@@ -6,6 +6,9 @@ import (
 
 	"io/ioutil"
 	"net/http"
+	"fmt"
+	"strings"
+
 )
 
 var client = &http.Client{
@@ -32,5 +35,10 @@ func Query(ip string) []byte {
 	}
 	req.Close = true
 	defer resp.Body.Close()
+	if strings.HasPrefix(string(content), `{"error":`) {
+		fmt.Println("Warning: Response starts with \"{\"error\":\", this may indicate an error.")
+		return []byte{}
+	}
+
 	return content
 }
