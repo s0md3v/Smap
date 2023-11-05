@@ -1,0 +1,35 @@
+name: smap
+adopt-info: smap
+summary: Smap is a port scanner built with shodan.io's free API
+description: |
+  Smap is a port scanner built with shodan.io's free API. 
+  It takes same command line arguments as Nmap and produces the same output which 
+  makes it a drop-in replacament for Nmap.
+  
+base: core20
+grade: stable 
+confinement: strict
+compression: lzo
+license: AGPL-3.0
+
+apps:
+  smap:
+    command: bin/smap
+    plugs:
+      - home
+      - network
+      
+parts:
+  smap:
+    source: https://github.com/s0md3v/Smap
+    source-type: git
+    plugin: go
+    build-snaps:
+      - go
+      
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(git describe --tags | sed 's/^v//' | cut -d "-" -f1)"
+      
+    override-build: |
+      go install -v github.com/s0md3v/smap/cmd/smap@latest
