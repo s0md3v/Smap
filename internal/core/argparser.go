@@ -56,12 +56,12 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"version-all":         true,
 	"version-trace":       true,
 	"sC":                  true,
-	"script":              true,
-	"script-args":         true,
-	"script-args-file":    true,
+	"script":              false,
+	"script-args":         false,
+	"script-args-file":    false,
 	"script-trace":        true,
 	"script-updatedb":     true,
-	"script-help":         true,
+	"script-help":         false,
 	"O":                   true,
 	"osscan-limit":        true,
 	"osscan-guess":        true,
@@ -107,6 +107,8 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"packet-trace":        true,
 	"iflist":              true,
 	"append-output":       true,
+	"active":              true,
+	"concurrency":         false,
 	"resume":              false,
 	"stylesheet":          false,
 	"webxml":              true,
@@ -175,8 +177,12 @@ func ParseArgs() (map[string]string, []string, bool) {
 					argPair[cleaned] = groups[2]
 					lastAction = 0
 					continue
-				} else {
+				} else if strings.Contains(token, "=") {
 					argPair[cleaned] = strings.Replace(token, thisArgName+"=", "", 1)
+					lastAction = 0
+					continue
+				} else {
+					argPair[cleaned] = ""
 				}
 			} else if action == 0 {
 				argPair[cleaned] = ""

@@ -24,11 +24,26 @@ type OS struct {
 	Cpes []string `json:"cpes"`
 	Port int      `json:"port"`
 }
+
+type Script struct {
+	ID       string          `json:"id"`
+	Output   string          `json:"output,omitempty"`
+	Elements []ScriptElement `json:"elements,omitempty"`
+}
+
+type ScriptElement struct {
+	Kind     string          `json:"kind"`
+	Key      string          `json:"key,omitempty"`
+	Value    string          `json:"value,omitempty"`
+	Elements []ScriptElement `json:"elements,omitempty"`
+}
+
 type Output struct {
 	IP        string    `json:"ip"`
 	Hostnames []string  `json:"hostnames"`
 	UHostname string    `json:"user_hostname,omitempty"`
 	Ports     []Port    `json:"ports"`
+	Scripts   []Script  `json:"scripts,omitempty"`
 	Tags      []string  `json:"tags,omitempty"`
 	Vulns     []string  `json:"vulns,omitempty"`
 	Start     time.Time `json:"start_time"`
@@ -44,4 +59,5 @@ type Port struct {
 	Product  string   `json:"product,omitempty"`
 	Version  string   `json:"version,omitempty"`
 	Ssl      bool     `json:"ssl,omitempty"`
+	Scripts  []Script `json:"scripts,omitempty"`
 }

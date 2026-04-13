@@ -30,9 +30,10 @@ Smap is a port scanner built with shodan.io's free API. It takes same command li
 - Scans 200 hosts per second
 - Doesn't require any account/api key
 - Vulnerability detection
-- Supports all nmap's output formats
+- Supports nmap's output formats
 - Service and version fingerprinting
 - Makes no contact to the targets
+- Optional active verification with nmap
 
 ## Installation
 ### Binaries
@@ -54,7 +55,7 @@ brew install smap
 ```
 
 ## Usage
-Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
+Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL`, `--concurrency`, `--append-output`, `--active` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
 
 ### Specifying targets
 ```
@@ -70,6 +71,7 @@ smap -iL targets.txt
 1.1.1.1         // IPv4 address
 example.com     // hostname
 178.23.56.0/8   // CIDR
+1.1.1.1-20      // IPv4 range
 ```
 
 ### Output
@@ -99,6 +101,26 @@ Smap scans these [~4000 ports](https://api.shodan.io/shodan/ports) by default. I
 smap -p21-30,80,443 -iL targets.txt
 ```
 
+### Active verification
+Use `--active` to make Smap verify passive hits with your local `nmap`. It will first collect passive hits from InternetDB and then run `nmap` only on the hosts and ports it found open.
+
+```
+smap --active -Pn -sV --version-light 1.1.1.1
+```
+
+This mode forwards nmap-compatible flags to `nmap` and keeps Smap-specific ones for itself. `-oS`, `-oJ` and `-oP` are supported with `--active` only when they write to a file, not stdout.
+
+If you use NSE scripts, `-oJ` and `-oX` keep the structured script data.
+
+This can save time if passive data is good enough for your use case.
+
+### Controlling concurrency
+Smap defaults to `3` workers to avoid hitting Shodan too aggressively. You can change that with `--concurrency`.
+
+```
+smap --concurrency 5 -iL targets.txt
+```
+
 ## Considerations
 Since Smap simply fetches existent port data from shodan.io, it is super fast but there's more to it. You should use Smap if:
 
@@ -110,4 +132,6 @@ Since Smap simply fetches existent port data from shodan.io, it is super fast bu
 #### You are okay with
 - not being able to scan IPv6 addresses
 - results being up to 7 days old
-- a few false negatives
+- some rare unreliable software detection when not using `--active`
+
+> Note: if you use `--active`, Smap will run `nmap` against the target and make active connections.

@@ -19,8 +19,14 @@ func Increment(counterType int) {
 	}
 }
 
+func SetCounts(total int, alive int) {
+	TotalHosts = count32(total)
+	AliveHosts = count32(alive)
+}
+
 var (
 	PortList      []int
+	OutputPorts   []int
 	ScanStartTime time.Time
 	ScanEndTime   time.Time
 	XmlFilename   string
@@ -30,7 +36,8 @@ var (
 	SmapFilename  string
 	PairFilename  string
 	Args          map[string]string
+	Concurrency   int
 	TotalHosts    count32
 	AliveHosts    count32
-	Version       = "0.1.12"
+	Version       = "0.2.0"
 )

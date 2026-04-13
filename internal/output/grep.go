@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	g "github.com/s0md3v/smap/internal/global"
 )
@@ -44,7 +43,7 @@ func ContinueGrep(result g.Output) {
 }
 
 func EndGrep() {
-	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
+	elapsed := fmt.Sprintf("%.2f", g.ScanEndTime.Sub(g.ScanStartTime).Seconds())
 	esTotal := ""
 	if g.TotalHosts > 1 {
 		esTotal = "es"
@@ -54,5 +53,5 @@ func EndGrep() {
 		sAlive = "s"
 	}
 	Write(fmt.Sprintf("# Nmap done at %s -- %d IP address%s (%d host%s up) scanned in %s seconds\n", ConvertTime(g.ScanEndTime, "nmap-file"), g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed), g.GrepFilename, openedGrepFile)
-	defer openedGrepFile.Close()
+	CloseFile(openedGrepFile)
 }

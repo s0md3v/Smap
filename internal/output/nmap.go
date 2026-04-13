@@ -5,15 +5,29 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	g "github.com/s0md3v/smap/internal/global"
 )
 
 var openedNmapFile *os.File
 
+const serviceDetectionNotice = "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n"
+
 func pad(str string, n int) string {
 	return strings.Repeat(" ", n) + str
+}
+
+func formatScriptOutput(script g.Script) string {
+	text := scriptText(script)
+	if text == "" {
+		return fmt.Sprintf("|_ %s\n", script.ID)
+	}
+	lines := strings.Split(text, "\n")
+	output := fmt.Sprintf("| %s: %s\n", script.ID, lines[0])
+	for _, line := range lines[1:] {
+		output += fmt.Sprintf("|   %s\n", line)
+	}
+	return strings.TrimSuffix(output, "\n") + "\n"
 }
 
 func StartNmap() {
@@ -65,6 +79,9 @@ func ContinueNmap(result g.Output) {
 			}
 		}
 		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort-len(strPort)+1), port.Service, pad(productLine, longestService-len(port.Service)+2))
+		for _, script := range port.Scripts {
+			thisOutput += formatScriptOutput(script)
+		}
 		if result.OS.Name != "" && result.OS.Port == port.Port {
 			serviceString += fmt.Sprintf("Service Info: OS: %s", result.OS.Name)
 			if len(result.OS.Cpes) > 0 {
@@ -79,17 +96,21 @@ func ContinueNmap(result g.Output) {
 		}
 	}
 	thisOutput += serviceString
+	for _, script := range result.Scripts {
+		thisOutput += formatScriptOutput(script)
+	}
 	thisOutput += "\n"
 	if value, ok := g.Args["oN"]; ok {
 		Write(thisOutput, value, openedNmapFile)
+		Write(serviceDetectionNotice, value, openedNmapFile)
 	} else {
 		Write(thisOutput, "-", openedNmapFile)
+		Write(serviceDetectionNotice, "-", openedNmapFile)
 	}
-	Write(thisOutput, "Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .\n", openedNmapFile)
 }
 
 func EndNmap() {
-	elapsed := fmt.Sprintf("%.2f", time.Since(g.ScanStartTime).Seconds())
+	elapsed := fmt.Sprintf("%.2f", g.ScanEndTime.Sub(g.ScanStartTime).Seconds())
 	esTotal := ""
 	if g.TotalHosts > 1 {
 		esTotal = "es"
@@ -107,5 +128,5 @@ func EndNmap() {
 		footer += fmt.Sprintf("Nmap done: %d IP address%s (%d host%s up) scanned in %s seconds\n", g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
 		Write(footer, "-", openedNmapFile)
 	}
-	defer openedNmapFile.Close()
+	CloseFile(openedNmapFile)
 }

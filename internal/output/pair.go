@@ -24,4 +24,5 @@ func ContinuePair(result g.Output) {
 }
 
 func EndPair() {
+	CloseFile(openedPairFile)
 }

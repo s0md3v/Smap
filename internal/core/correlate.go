@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -150,5 +151,8 @@ func Correlate(ports []int, cpes []string) ([]g.Port, g.OS) {
 		dummyPort.Protocol = "tcp"
 		result = append(result, dummyPort)
 	}
+	sort.Slice(result, func(i int, j int) bool {
+		return result[i].Port < result[j].Port
+	})
 	return result, thisOS
 }

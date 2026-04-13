@@ -11,6 +11,7 @@ var firstDone = false
 var openedJsonFile *os.File
 
 func StartJson() {
+	firstDone = false
 	if g.JsonFilename != "-" {
 		openedJsonFile = OpenFile(g.JsonFilename)
 	}
@@ -29,5 +30,5 @@ func ContinueJson(result g.Output) {
 
 func EndJson() {
 	Write("]", g.JsonFilename, openedJsonFile)
-	defer openedJsonFile.Close()
+	CloseFile(openedJsonFile)
 }

@@ -1,14 +1,15 @@
 package core
 
 import (
+	"fmt"
+	"io"
 	"net"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
-	"io/ioutil"
-	"net/http"
-	"fmt"
-	"strings"
-
+	g "github.com/s0md3v/smap/internal/global"
 )
 
 var client = &http.Client{
@@ -22,21 +23,36 @@ var client = &http.Client{
 	},
 }
 
+var internetDBURL = "https://internetdb.shodan.io/"
+
 func Query(ip string) []byte {
-	url := "https://internetdb.shodan.io/" + ip
+	url := internetDBURL + ip
 	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return []byte{}
+	}
+	req.Header.Set("User-Agent", "smap/"+g.Version)
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: InternetDB request failed for %s: %v\n", ip, err)
 		return []byte{}
 	}
-	content, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}
 	}
-	req.Close = true
-	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		message := strings.TrimSpace(string(content))
+		if message != "" {
+			fmt.Fprintf(os.Stderr, "Warning: InternetDB returned HTTP %d for %s: %s\n", resp.StatusCode, ip, message)
+		} else {
+			fmt.Fprintf(os.Stderr, "Warning: InternetDB returned HTTP %d for %s.\n", resp.StatusCode, ip)
+		}
+		return []byte{}
+	}
 	if strings.HasPrefix(string(content), `{"error":`) {
-		fmt.Println("Warning: Response starts with \"{\"error\":\", this may indicate an error.")
+		fmt.Fprintf(os.Stderr, "Warning: InternetDB returned an error response for %s.\n", ip)
 		return []byte{}
 	}
 

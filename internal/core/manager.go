@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -10,8 +11,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"encoding/json"
 
 	"github.com/s0md3v/smap/internal/db"
 	g "github.com/s0md3v/smap/internal/global"
@@ -24,7 +23,8 @@ var (
 	activeOutputs  sync.WaitGroup
 	activeEnders   sync.WaitGroup
 	activeObjects  sync.WaitGroup
-	targetsChannel = make(chan scanObject, 3)
+	seenTargets    sync.Map
+	targetsChannel = make(chan scanObject, 128)
 	outputChannel  = make(chan g.Output, 1000)
 	reAddressRange = regexp.MustCompile(`^\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?\.\d{1,3}(-\d{1,3})?$`)
 )
@@ -42,6 +42,12 @@ type respone struct {
 	Ports     []int    `json:"ports"`
 	Tags      []string `json:"tags"`
 	Vulns     []string `json:"vulns"`
+}
+
+type outputHandlers struct {
+	start []func()
+	write []func(g.Output)
+	end   []func()
 }
 
 func getPorts() []int {
@@ -100,11 +106,19 @@ func isAddressRange(str string) bool {
 	}
 	for _, part := range strings.Split(str, ".") {
 		for _, each := range strings.Split(part, "-") {
-			if each[0] == 48 { // 48 is 0 in decimal
+			if len(each) > 1 && each[0] == 48 { // 48 is 0 in decimal
 				return false
 			}
 			n, _ := strconv.Atoi(each)
 			if n > 255 {
+				return false
+			}
+		}
+		if strings.Contains(part, "-") {
+			bounds := strings.Split(part, "-")
+			start, _ := strconv.Atoi(bounds[0])
+			end, _ := strconv.Atoi(bounds[1])
+			if start > end {
 				return false
 			}
 		}
@@ -114,8 +128,10 @@ func isAddressRange(str string) bool {
 
 func hostnameToIP(hostname string) string {
 	ips, _ := net.LookupIP(hostname)
-	if len(ips) > 0 {
-		return ips[0].String()
+	for _, ip := range ips {
+		if ip4 := ip.To4(); ip4 != nil {
+			return ip4.String()
+		}
 	}
 	return ""
 }
@@ -130,73 +146,99 @@ func incIP(ip net.IP) {
 }
 
 func handleOutput() {
-	var (
-		startOutput    []func()
-		continueOutput []func(g.Output)
-		endOutput      []func()
-	)
-
-	activeEnders.Add(1)
+	handlers := getOutputHandlers()
 	if value, ok := g.Args["oA"]; ok {
-		activeEnders.Add(2)
 		if value == "-" {
 			fmt.Fprint(os.Stderr, "Cannot display multiple output types to stdout.\nQUITTING!\n")
 			os.Exit(1)
-		} else {
-			g.XmlFilename = value + ".xml"
-			g.GrepFilename = value + ".gnmap"
-			g.Args["oN"] = value + ".nmap"
 		}
-		startOutput = []func(){o.StartXML, o.StartGrep, o.StartNmap}
-		continueOutput = []func(g.Output){o.ContinueXML, o.ContinueGrep, o.ContinueNmap}
-		endOutput = []func(){o.EndXML, o.EndGrep, o.EndNmap}
-	} else if value, ok := g.Args["oX"]; ok {
-		startOutput = []func(){o.StartXML}
-		continueOutput = []func(g.Output){o.ContinueXML}
-		endOutput = []func(){o.EndXML}
-		g.XmlFilename = value
-	} else if value, ok := g.Args["oG"]; ok {
-		startOutput = []func(){o.StartGrep}
-		continueOutput = []func(g.Output){o.ContinueGrep}
-		endOutput = []func(){o.EndGrep}
-		g.GrepFilename = value
-	} else if value, ok := g.Args["oJ"]; ok {
-		startOutput = []func(){o.StartJson}
-		continueOutput = []func(g.Output){o.ContinueJson}
-		endOutput = []func(){o.EndJson}
-		g.JsonFilename = value
-	} else if value, ok := g.Args["oS"]; ok {
-		startOutput = []func(){o.StartSmap}
-		continueOutput = []func(g.Output){o.ContinueSmap}
-		endOutput = []func(){o.EndSmap}
-		g.SmapFilename = value
-	} else if value, ok := g.Args["oP"]; ok {
-		startOutput = []func(){o.StartPair}
-		continueOutput = []func(g.Output){o.ContinuePair}
-		endOutput = []func(){o.EndPair}
-		g.PairFilename = value
-	} else {
-		startOutput = []func(){o.StartNmap}
-		continueOutput = []func(g.Output){o.ContinueNmap}
-		endOutput = []func(){o.EndNmap}
 	}
-	for _, function := range startOutput {
+	activeEnders.Add(len(handlers.end))
+	for _, function := range handlers.start {
 		function()
 	}
 	for output := range outputChannel {
-		for _, function := range continueOutput {
+		for _, function := range handlers.write {
 			function(output)
 		}
 		activeOutputs.Done()
 	}
-	for _, function := range endOutput {
+	for _, function := range handlers.end {
 		function()
 		activeEnders.Done()
 	}
 }
 
+func getOutputHandlers() outputHandlers {
+	if value, ok := g.Args["oA"]; ok {
+		g.XmlFilename = value + ".xml"
+		g.GrepFilename = value + ".gnmap"
+		g.Args["oN"] = value + ".nmap"
+		return outputHandlers{
+			start: []func(){o.StartXML, o.StartGrep, o.StartNmap},
+			write: []func(g.Output){o.ContinueXML, o.ContinueGrep, o.ContinueNmap},
+			end:   []func(){o.EndXML, o.EndGrep, o.EndNmap},
+		}
+	} else if value, ok := g.Args["oX"]; ok {
+		g.XmlFilename = value
+		return outputHandlers{
+			start: []func(){o.StartXML},
+			write: []func(g.Output){o.ContinueXML},
+			end:   []func(){o.EndXML},
+		}
+	} else if value, ok := g.Args["oG"]; ok {
+		g.GrepFilename = value
+		return outputHandlers{
+			start: []func(){o.StartGrep},
+			write: []func(g.Output){o.ContinueGrep},
+			end:   []func(){o.EndGrep},
+		}
+	} else if value, ok := g.Args["oJ"]; ok {
+		g.JsonFilename = value
+		return outputHandlers{
+			start: []func(){o.StartJson},
+			write: []func(g.Output){o.ContinueJson},
+			end:   []func(){o.EndJson},
+		}
+	} else if value, ok := g.Args["oS"]; ok {
+		g.SmapFilename = value
+		return outputHandlers{
+			start: []func(){o.StartSmap},
+			write: []func(g.Output){o.ContinueSmap},
+			end:   []func(){o.EndSmap},
+		}
+	} else if value, ok := g.Args["oP"]; ok {
+		g.PairFilename = value
+		return outputHandlers{
+			start: []func(){o.StartPair},
+			write: []func(g.Output){o.ContinuePair},
+			end:   []func(){o.EndPair},
+		}
+	}
+	return outputHandlers{
+		start: []func(){o.StartNmap},
+		write: []func(g.Output){o.ContinueNmap},
+		end:   []func(){o.EndNmap},
+	}
+}
+
+func renderResults(results []g.Output) {
+	handlers := getOutputHandlers()
+	for _, function := range handlers.start {
+		function()
+	}
+	for _, result := range results {
+		for _, function := range handlers.write {
+			function(result)
+		}
+	}
+	for _, function := range handlers.end {
+		function()
+	}
+}
+
 func scanner() {
-	threads := make(chan bool, 3)
+	threads := make(chan bool, g.Concurrency)
 	for target := range targetsChannel {
 		threads <- true
 		go func(target scanObject) {
@@ -207,13 +249,25 @@ func scanner() {
 	}
 }
 
+func shouldQueueTarget(ip string) bool {
+	if ip == "" {
+		return false
+	}
+	_, loaded := seenTargets.LoadOrStore(ip, true)
+	return !loaded
+}
+
 func createScanObjects(object string) {
 	activeScans.Add(1)
 	var oneObject scanObject
 	oneObject.Ports = g.PortList
 	if isIPv4(object) {
 		oneObject.IP = object
-		targetsChannel <- oneObject
+		if shouldQueueTarget(oneObject.IP) {
+			targetsChannel <- oneObject
+		} else {
+			activeScans.Done()
+		}
 	} else if strings.Contains(object, "/") && isIPv4(strings.Split(object, "/")[0]) {
 		activeScans.Done()
 		ip, ipnet, err := net.ParseCIDR(object)
@@ -223,18 +277,44 @@ func createScanObjects(object string) {
 		for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incIP(ip) {
 			oneObject.IP = ip.String()
 			activeScans.Add(1)
-			targetsChannel <- oneObject
+			if shouldQueueTarget(oneObject.IP) {
+				targetsChannel <- oneObject
+			} else {
+				activeScans.Done()
+			}
 		}
+	} else if isAddressRange(object) {
+		activeScans.Done()
+		targets, err := expandAddressRange(object)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Skipping invalid address range %q\n", object)
+			return
+		}
+		for _, target := range targets {
+			oneObject.IP = target
+			activeScans.Add(1)
+			if shouldQueueTarget(oneObject.IP) {
+				targetsChannel <- oneObject
+			} else {
+				activeScans.Done()
+			}
+		}
+		return
 	} else if isHostname(object) {
 		ip := hostnameToIP(object)
 		if ip != "" {
 			oneObject.IP = ip
 			oneObject.Hostname = object
-			targetsChannel <- oneObject
+			if shouldQueueTarget(oneObject.IP) {
+				targetsChannel <- oneObject
+			} else {
+				activeScans.Done()
+			}
 		} else {
 			activeScans.Done()
 		}
-	} else if isAddressRange(object) {
+	} else if object == "" {
+		activeScans.Done()
 		return
 	} else {
 		activeScans.Done()
@@ -278,24 +358,75 @@ func processScanObject(object scanObject) {
 func Init() {
 	args, extra, invalid := ParseArgs()
 	if invalid {
-		fmt.Println("One or more of your arguments are invalid. Refer to docs.\nQUITTING!")
+		fmt.Fprintln(os.Stderr, "One or more of your arguments are invalid. Refer to docs.\nQUITTING!")
 		os.Exit(1)
 	} else if _, ok := args["h"]; ok || len(os.Args) == 1 {
 		fmt.Print(db.HelpText)
 		os.Exit(0)
 	}
 	g.Args = args
-	json.Unmarshal(db.NmapSigs, &Probes)
-	json.Unmarshal(db.NmapTable, &Table)
+	g.OutputPorts = nil
+	seenTargets = sync.Map{}
+	concurrency, err := getConcurrency()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+		os.Exit(1)
+	}
+	g.Concurrency = concurrency
+	if err := json.Unmarshal(db.NmapSigs, &Probes); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load embedded probe signatures: %v\nQUITTING!\n", err)
+		os.Exit(1)
+	}
+	if err := json.Unmarshal(db.NmapTable, &Table); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load embedded port table: %v\nQUITTING!\n", err)
+		os.Exit(1)
+	}
 	g.PortList = getPorts()
 	g.ScanStartTime = time.Now()
 	go scanner()
+	if _, ok := g.Args["active"]; ok {
+		if err := validateActiveMode(); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+			os.Exit(1)
+		}
+		resultsChannel := make(chan []g.Output, 1)
+		go collectOutput(resultsChannel)
+		enqueueTargets(extra)
+		activeScans.Wait()
+		close(targetsChannel)
+		activeOutputs.Wait()
+		close(outputChannel)
+		passiveResults := <-resultsChannel
+		activeResults, activeStats, err := enrichActive(passiveResults)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+			os.Exit(1)
+		}
+		totalHosts := int(g.TotalHosts)
+		g.ScanEndTime = time.Now()
+		g.SetCounts(totalHosts, activeStats.AliveHosts)
+		g.OutputPorts = candidatePortUnion(passiveResults)
+		renderResults(activeResults)
+		fmt.Fprintln(os.Stderr, formatActiveSummary(totalHosts, activeStats))
+		return
+	}
 	go handleOutput()
+	enqueueTargets(extra)
+	activeScans.Wait()
+	close(targetsChannel)
+	g.ScanEndTime = time.Now()
+	activeOutputs.Wait()
+	close(outputChannel)
+	activeEnders.Wait()
+}
+
+func enqueueTargets(extra []string) {
 	if value, ok := g.Args["iL"]; ok {
 		scanner := bufio.NewScanner(os.Stdin)
 		if value != "-" {
 			file, err := os.Open(value)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to open %s: %v\nQUITTING!\n", value, err)
 				os.Exit(1)
 			}
 			defer file.Close()
@@ -306,10 +437,11 @@ func Init() {
 		}
 
 		if err := scanner.Err(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to read targets: %v\nQUITTING!\n", err)
 			os.Exit(1)
 		}
 	} else if len(extra) != 0 {
-		threads := make(chan bool, 3)
+		threads := make(chan bool, g.Concurrency)
 		for _, arg := range extra {
 			activeObjects.Add(1)
 			threads <- true
@@ -323,10 +455,4 @@ func Init() {
 	} else {
 		fmt.Println("WARNING: No targets were specified, so 0 hosts scanned.")
 	}
-	activeScans.Wait()
-	close(targetsChannel)
-	g.ScanEndTime = time.Now()
-	activeOutputs.Wait()
-	close(outputChannel)
-	activeEnders.Wait()
 }

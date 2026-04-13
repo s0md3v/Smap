@@ -5,10 +5,33 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	g "github.com/s0md3v/smap/internal/global"
 )
 
 func GetCommand() string {
-	return "nmap " + strings.Join(os.Args[1:], " ")
+	args := make([]string, 0, len(os.Args)-1)
+	skipNext := false
+	for _, token := range os.Args[1:] {
+		if skipNext {
+			skipNext = false
+			continue
+		}
+		switch {
+		case token == "--active":
+			continue
+		case token == "--append-output":
+			continue
+		case token == "--concurrency":
+			skipNext = true
+			continue
+		case strings.HasPrefix(token, "--concurrency="):
+			continue
+		default:
+			args = append(args, token)
+		}
+	}
+	return "nmap " + strings.Join(args, " ")
 }
 
 func ConvertTime(unixTime time.Time, format string) string {
@@ -25,7 +48,11 @@ func ConvertTime(unixTime time.Time, format string) string {
 }
 
 func OpenFile(filepath string) *os.File {
-	f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	flags := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if _, ok := g.Args["append-output"]; ok {
+		flags = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	}
+	f, err := os.OpenFile(filepath, flags, 0644)
 	if err != nil {
 		fmt.Fprint(os.Stderr, fmt.Sprintf("Failed to open output file %s for writing\n", filepath))
 		fmt.Fprint(os.Stderr, "QUITTING!\n")
@@ -40,4 +67,10 @@ func Write(str string, dest string, openedFile *os.File) {
 		return
 	}
 	openedFile.WriteString(str)
+}
+
+func CloseFile(openedFile *os.File) {
+	if openedFile != nil {
+		openedFile.Close()
+	}
 }

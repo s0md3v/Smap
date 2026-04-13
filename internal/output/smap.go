@@ -34,6 +34,16 @@ func ContinueSmap(result g.Output) {
 	if len(result.Tags) != 0 {
 		thisString += fmt.Sprintf("  - Tags: %s\n", strings.Join(result.Tags, ", "))
 	}
+	if len(result.Scripts) != 0 {
+		thisString += "  - Scripts:\n"
+		for _, script := range result.Scripts {
+			thisString += fmt.Sprintf("    - %s", script.ID)
+			if text := scriptText(script); text != "" {
+				thisString += fmt.Sprintf(": %s", strings.ReplaceAll(text, "\n", "\n      "))
+			}
+			thisString += "\n"
+		}
+	}
 	thisString += "  + Ports:\n"
 	for _, port := range result.Ports {
 		thisString += fmt.Sprintf("    - %d %s", port.Port, port.Protocol)
@@ -46,6 +56,13 @@ func ContinueSmap(result g.Output) {
 			thisString += strings.Join(port.Cpes, " ")
 		}
 		thisString += "\n"
+		for _, script := range port.Scripts {
+			thisString += fmt.Sprintf("      - %s", script.ID)
+			if text := scriptText(script); text != "" {
+				thisString += fmt.Sprintf(": %s", strings.ReplaceAll(text, "\n", "\n        "))
+			}
+			thisString += "\n"
+		}
 	}
 	if len(result.Vulns) != 0 {
 		thisString += fmt.Sprintf("  - Vulns: %s\n", strings.Join(result.Vulns, ", "))
@@ -54,4 +71,5 @@ func ContinueSmap(result g.Output) {
 }
 
 func EndSmap() {
+	CloseFile(openedSmapFile)
 }
