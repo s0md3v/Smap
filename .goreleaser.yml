@@ -35,13 +35,11 @@ builds:
         goarch: mips
 
 archives:
-    - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ .Arm }}"
+    - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os \"darwin\" }}macOS{{ else }}{{ .Os }}{{ end }}_{{ .Arch }}{{ .Arm }}"
       format: tar.xz
       format_overrides:
         - goos: windows
           format: zip
-      replacements:
-          darwin: macOS
       wrap_in_directory: true
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}--sha256_checksums.txt"
