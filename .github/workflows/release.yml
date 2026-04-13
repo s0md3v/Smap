@@ -3,6 +3,9 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: GoReleaser build
@@ -10,20 +13,21 @@ jobs:
 
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set Up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.x'
+          go-version-file: go.mod
         id: go
 
       - name: run GoReleaser
-        uses: goreleaser/goreleaser-action@master
+        uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
-          args: release --rm-dist -p 2
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --parallelism=2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

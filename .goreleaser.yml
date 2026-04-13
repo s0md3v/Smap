@@ -1,3 +1,5 @@
+version: 2
+
 project_name: smap
 builds:
   - main: .
@@ -45,4 +47,3 @@ checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}--sha256_checksums.txt"
 release:
   draft: true
-
