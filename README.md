@@ -55,7 +55,7 @@ brew install smap
 ```
 
 ## Usage
-Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL`, `--concurrency`, `--append-output`, `--active` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
+Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL`, `--concurrency`, `--append-output`, `--active`, `--shodan-key`, `--config` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
 
 ### Specifying targets
 ```
@@ -120,6 +120,38 @@ Smap defaults to `3` workers to avoid hitting Shodan too aggressively. You can c
 ```
 smap --concurrency 5 -iL targets.txt
 ```
+
+### Using the full Shodan API
+By default Smap queries Shodan's free [InternetDB](https://internetdb.shodan.io) endpoint, which needs no account. If you have a [Shodan API key](https://account.shodan.io/), Smap can query the full [Host API](https://developer.shodan.io/api#host-information) at `api.shodan.io` instead, which returns richer data (org/ISP/geo info, per-service banners, etc.) at the cost of query credits.
+
+Smap looks for a key in this order:
+1. `--shodan-key <key>`
+2. `$SHODAN_API_KEY` environment variable
+3. A JSON config file
+
+```
+smap --shodan-key YOUR_API_KEY example.com
+```
+
+**Config file**
+
+Copy [`configs/smap.example.json`](configs/smap.example.json) to your config directory and fill in your key:
+
+```json
+{
+  "shodan_api_key": "YOUR_SHODAN_API_KEY_HERE"
+}
+```
+
+Without `--config`, Smap looks for `config.json` in the OS-standard per-user config directory:
+
+| OS | Default path |
+|----|---------------|
+| Windows | `%AppData%\smap\config.json` |
+| Linux | `~/.config/smap/config.json` |
+| macOS | `~/Library/Application Support/smap/config.json` |
+
+Use `--config <path>` (or the `$SMAP_CONFIG` environment variable) to point at a different file.
 
 ## Considerations
 Since Smap simply fetches existent port data from shodan.io, it is super fast but there's more to it. You should use Smap if:
