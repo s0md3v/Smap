@@ -23,6 +23,9 @@ jobs:
           go-version-file: go.mod
         id: go
 
+      - name: Wait for tag to propagate
+        run: sleep 15
+
       - name: run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
