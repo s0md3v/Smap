@@ -40,5 +40,5 @@ var (
 	ShodanRPS     float64
 	TotalHosts    count32
 	AliveHosts    count32
-	Version       = "0.3.0"
+	Version       = "0.3.1"
 )
