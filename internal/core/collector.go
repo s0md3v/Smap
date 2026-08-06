@@ -1,6 +1,6 @@
 package core
 
-import g "github.com/s0md3v/smap/internal/global"
+import g "github.com/dylan1501/smap/internal/global"
 
 func collectOutput(done chan<- []g.Output) {
 	results := []g.Output{}

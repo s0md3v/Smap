@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	g "github.com/s0md3v/smap/internal/global"
+	g "github.com/dylan1501/smap/internal/global"
 )
 
 var openedNmapFile *os.File

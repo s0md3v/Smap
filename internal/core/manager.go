@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/s0md3v/smap/internal/db"
-	g "github.com/s0md3v/smap/internal/global"
-	o "github.com/s0md3v/smap/internal/output"
+	"github.com/dylan1501/smap/internal/db"
+	g "github.com/dylan1501/smap/internal/global"
+	o "github.com/dylan1501/smap/internal/output"
 	"github.com/weppos/publicsuffix-go/publicsuffix"
 )
 

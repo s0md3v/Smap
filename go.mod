@@ -1,4 +1,4 @@
-module github.com/s0md3v/smap
+module github.com/dylan1501/smap
 
 go 1.25.0
 

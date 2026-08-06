@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	g "github.com/s0md3v/smap/internal/global"
+	g "github.com/dylan1501/smap/internal/global"
 )
 
 var HelpText = fmt.Sprintf(`Smap %s

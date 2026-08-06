@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	g "github.com/s0md3v/smap/internal/global"
+	g "github.com/dylan1501/smap/internal/global"
 )
 
 var client = &http.Client{

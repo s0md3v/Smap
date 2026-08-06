@@ -1,22 +1,22 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/s0md3v/smap"><img src="/static/smap-logo.png" alt="Smap logo"></a>
+  <a href="https://github.com/dylan1501/Smap"><img src="/static/smap-logo.png" alt="Smap logo"></a>
 </h1>
 
 <h4 align="center">passive Nmap like scanner built with shodan.io</h4>
 
 <p align="center">
-  <a href="https://github.com/s0md3v/Smap/releases">
-    <img src="https://img.shields.io/github/release/s0md3v/Smap.svg?label=version">
+  <a href="https://github.com/dylan1501/Smap/releases">
+    <img src="https://img.shields.io/github/release/dylan1501/Smap.svg?label=version">
   </a>
-  <a href="https://github.com/s0md3v/Smap/releases">
-    <img src="https://img.shields.io/github/downloads/s0md3v/Smap/total">
+  <a href="https://github.com/dylan1501/Smap/releases">
+    <img src="https://img.shields.io/github/downloads/dylan1501/Smap/total">
   </a>
-  <a href="https://github.com/s0md3v/SMap/issues?q=is%3Aissue+is%3Aclosed">
-      <img src="https://img.shields.io/github/issues-closed-raw/s0md3v/Smap?color=dark-green&label=issues%20fixed">
+  <a href="https://github.com/dylan1501/Smap/issues?q=is%3Aissue+is%3Aclosed">
+      <img src="https://img.shields.io/github/issues-closed-raw/dylan1501/Smap?color=dark-green&label=issues%20fixed">
   </a>
-  <a href="https://travis-ci.com/s0md3v/Smap">
-      <img src="https://img.shields.io/travis/com/s0md3v/Smap.svg?color=dark-green&label=tests">
+  <a href="https://github.com/dylan1501/Smap/actions/workflows/go.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/dylan1501/Smap/go.yml?branch=main&label=tests">
   </a>
 </p>
 
@@ -37,12 +37,12 @@ Smap is a port scanner built with shodan.io's free API. It takes same command li
 
 ## Installation
 ### Binaries
-You can download a pre-built binary from [here](https://github.com/s0md3v/Smap/releases) and use it right away.
+You can download a pre-built binary from [here](https://github.com/dylan1501/Smap/releases) and use it right away.
 
 ### Manual
-`go install -v github.com/s0md3v/smap/cmd/smap@latest`
+`go install -v github.com/dylan1501/smap/cmd/smap@latest`
 
-Confused or something not working? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
+Confused or something not working? For more detailed instructions, [click here](https://github.com/dylan1501/Smap/wiki/FAQ#how-do-i-install-smap)
 ### AUR pacakge
 Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git) (builds from source) and [smap-bin](https://aur.archlinux.org/packages/smap-bin) (pre-built binary).
 

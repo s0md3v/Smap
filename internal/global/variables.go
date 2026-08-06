@@ -39,5 +39,5 @@ var (
 	Concurrency   int
 	TotalHosts    count32
 	AliveHosts    count32
-	Version       = "0.2.0"
+	Version       = "0.3.0"
 )

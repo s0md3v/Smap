@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	g "github.com/s0md3v/smap/internal/global"
+	g "github.com/dylan1501/smap/internal/global"
 )
 
 var execNmap = func(args []string) ([]byte, []byte, error) {
