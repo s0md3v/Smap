@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	g "github.com/dylan1501/smap/internal/global"
@@ -29,6 +30,37 @@ var (
 	internetDBURL = "https://internetdb.shodan.io/"
 	shodanHostURL = "https://api.shodan.io/shodan/host/"
 )
+
+const shodanMaxRetries = 5
+
+// rateLimiter paces calls to at most one every interval, shared across all
+// goroutines. --concurrency only bounds how many workers run at once; it
+// doesn't space out the requests a single worker fires, so without this,
+// smap can blow past Shodan's ~1 req/sec API limit even at --concurrency 1.
+type rateLimiter struct {
+	mu       sync.Mutex
+	once     sync.Once
+	interval time.Duration
+	last     time.Time
+}
+
+func (r *rateLimiter) wait() {
+	r.once.Do(func() {
+		rps := g.ShodanRPS
+		if rps <= 0 {
+			rps = defaultShodanRPS
+		}
+		r.interval = time.Duration(float64(time.Second) / rps)
+	})
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if elapsed := time.Since(r.last); elapsed < r.interval {
+		time.Sleep(r.interval - elapsed)
+	}
+	r.last = time.Now()
+}
+
+var shodanLimiter = &rateLimiter{}
 
 // shodanHostData mirrors one entry of the "data" array returned by
 // GET https://api.shodan.io/shodan/host/{ip} - see
@@ -111,10 +143,23 @@ func queryShodanAPI(ip string, apiKey string) []byte {
 	query.Set("key", apiKey)
 	reqURL.RawQuery = query.Encode()
 
-	content, status, err := doRequest(reqURL.String())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: Shodan API request failed for %s: %v\n", ip, err)
-		return []byte{}
+	var content []byte
+	var status int
+	for attempt := 1; attempt <= shodanMaxRetries; attempt++ {
+		shodanLimiter.wait()
+		content, status, err = doRequest(reqURL.String())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Shodan API request failed for %s: %v\n", ip, err)
+			return []byte{}
+		}
+		if status != http.StatusTooManyRequests {
+			break
+		}
+		if attempt == shodanMaxRetries {
+			fmt.Fprintf(os.Stderr, "Warning: Shodan API kept rate-limiting %s after %d attempts, giving up.\n", ip, shodanMaxRetries)
+			return []byte{}
+		}
+		time.Sleep(shodanLimiter.interval * time.Duration(attempt))
 	}
 	if status != http.StatusOK {
 		message := strings.TrimSpace(string(content))

@@ -110,6 +110,7 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"active":              true,
 	"concurrency":         false,
 	"shodan-key":          false,
+	"shodan-rate":         false,
 	"config":              false,
 	"resume":              false,
 	"stylesheet":          false,

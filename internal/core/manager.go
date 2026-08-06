@@ -373,6 +373,12 @@ func Init() {
 		os.Exit(1)
 	}
 	g.Concurrency = concurrency
+	shodanRPS, err := getShodanRPS()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+		os.Exit(1)
+	}
+	g.ShodanRPS = shodanRPS
 	if err := json.Unmarshal(db.NmapSigs, &Probes); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load embedded probe signatures: %v\nQUITTING!\n", err)
 		os.Exit(1)

@@ -153,6 +153,16 @@ Without `--config`, Smap looks for `config.json` in the OS-standard per-user con
 
 Use `--config <path>` (or the `$SMAP_CONFIG` environment variable) to point at a different file.
 
+**Rate limiting**
+
+Most Shodan API plans allow 1 request/second. `--concurrency` only controls how many workers run at once, not how fast they fire requests, so Smap paces its own requests to `api.shodan.io` (shared across all workers) at 1/sec by default and automatically retries a few times if it still gets HTTP 429. If your plan allows more, raise it with `--shodan-rate`:
+
+```
+smap --shodan-key YOUR_API_KEY --shodan-rate 5 -iL targets.txt
+```
+
+This limiter only applies to the full Shodan API; InternetDB is unaffected.
+
 ## Considerations
 Since Smap simply fetches existent port data from shodan.io, it is super fast but there's more to it. You should use Smap if:
 
