@@ -5,26 +5,9 @@
 
 <h4 align="center">passive Nmap like scanner built with shodan.io</h4>
 
-<p align="center">
-  <a href="https://github.com/s0md3v/Smap/releases">
-    <img src="https://img.shields.io/github/release/s0md3v/Smap.svg?label=version">
-  </a>
-  <a href="https://github.com/s0md3v/Smap/releases">
-    <img src="https://img.shields.io/github/downloads/s0md3v/Smap/total">
-  </a>
-  <a href="https://github.com/s0md3v/SMap/issues?q=is%3Aissue+is%3Aclosed">
-      <img src="https://img.shields.io/github/issues-closed-raw/s0md3v/Smap?color=dark-green&label=issues%20fixed">
-  </a>
-  <a href="https://travis-ci.com/s0md3v/Smap">
-      <img src="https://img.shields.io/travis/com/s0md3v/Smap.svg?color=dark-green&label=tests">
-  </a>
-</p>
-
-<p align="center"><img src="/static/smap-demo.png" alt="Smap demo"></p>
-
 ---
 
-Smap is a port scanner built with shodan.io's free API. It takes same command line arguments as Nmap and produces the same output which makes it a drop-in replacament for Nmap.
+Smap is a passive port scanner built with shodan.io's free API. It takes the same command line arguments as Nmap and produces the same output, which makes it a drop-in replacement for Nmap.
 
 ## Features
 - Scans 200 hosts per second
@@ -32,8 +15,8 @@ Smap is a port scanner built with shodan.io's free API. It takes same command li
 - Vulnerability detection
 - Supports nmap's output formats
 - Service and version fingerprinting
-- Makes no contact to the targets
-- Optional active verification with nmap
+- Makes no contact to the targets in passive mode
+- Optional nmap acceleration using Shodan's reported ports
 
 ## Installation
 ### Binaries
@@ -43,11 +26,11 @@ You can download a pre-built binary from [here](https://github.com/s0md3v/Smap/r
 `go install -v github.com/s0md3v/smap/cmd/smap@latest`
 
 Confused or something not working? For more detailed instructions, [click here](https://github.com/s0md3v/Smap/wiki/FAQ#how-do-i-install-smap)
-### AUR pacakge
+### AUR package
 Smap is available on AUR as [smap-git](https://aur.archlinux.org/packages/smap-git) (builds from source) and [smap-bin](https://aur.archlinux.org/packages/smap-bin) (pre-built binary).
 
 ### Homebrew/Mac
-Smap is also avaible on [Homebrew](https://formulae.brew.sh/formula/smap).
+Smap is also available on [Homebrew](https://formulae.brew.sh/formula/smap).
 
 ```
 brew update
@@ -55,13 +38,13 @@ brew install smap
 ```
 
 ## Usage
-Smap takes the same arguments as Nmap but options other than `-p`, `-h`, `-o*`, `-iL`, `--concurrency`, `--append-output`, `--active` are ignored. If you are unfamiliar with Nmap, here's how to use Smap.
+Smap takes the same arguments as Nmap, but options other than `-p`, `-h`, `-V`, `-o*`, `-iL`, `--concurrency`, and `--append-output` are ignored in passive mode. Use `--nmap` to pass Nmap options to a real Nmap scan after passive port discovery. If you are unfamiliar with Nmap, here's how to use Smap.
 
 ### Specifying targets
 ```
 smap 127.0.0.1 127.0.0.2
 ```
-You can also use a list of targets, seperated by newlines.
+You can also use a list of targets, separated by newlines.
 ```
 smap -iL targets.txt
 ```
@@ -75,7 +58,7 @@ example.com     // hostname
 ```
 
 ### Output
-Smap supports 6 output formats which can be used with the `-o* ` as follows
+Smap supports 7 output formats which can be used with `-o*` as follows:
 ```
 smap example.com -oX output.xml
 ```
@@ -87,7 +70,7 @@ oX    // nmap's xml format
 oG    // nmap's greppable format
 oN    // nmap's default format
 oA    // output in all 3 formats above at once
-oP    // IP:PORT pairs seperated by newlines
+oP    // IP:PORT pairs separated by newlines
 oS    // custom smap format
 oJ    // json
 ```
@@ -101,16 +84,16 @@ Smap scans these [~4000 ports](https://api.shodan.io/shodan/ports) by default. I
 smap -p21-30,80,443 -iL targets.txt
 ```
 
-### Active verification
-Use `--active` to make Smap verify passive hits with your local `nmap`. It will first collect passive hits from InternetDB and then run `nmap` only on the hosts and ports it found open.
+### Nmap acceleration
+Use `--nmap` to narrow a scan with your local `nmap`. Smap first collects the union of ports reported by Shodan and then runs Nmap once against the original targets with that smaller port range.
 
 ```
-smap --active -Pn -sV --version-light 1.1.1.1
+smap --nmap -Pn -sV --version-light 1.1.1.1
 ```
 
-This mode forwards nmap-compatible flags to `nmap` and keeps Smap-specific ones for itself. `-oS`, `-oJ` and `-oP` are supported with `--active` only when they write to a file, not stdout.
+Except for `--nmap` and `--concurrency`, the supplied arguments are passed to Nmap. Smap replaces the port range with the Shodan candidates; if you specify `-p`, it first limits the candidates to that range. Nmap handles the scan and output directly, so its options and output formats behave normally. Host-only operations such as `-sL` and `-sn` are passed through without passive port discovery.
 
-If you use NSE scripts, `-oJ` and `-oX` keep the structured script data.
+Smap's custom output formats are passive-mode features; with `--nmap`, output options have their normal Nmap meanings. If Shodan reports no candidate ports, Nmap is not run.
 
 This can save time if passive data is good enough for your use case.
 
@@ -132,6 +115,6 @@ Since Smap simply fetches existent port data from shodan.io, it is super fast bu
 #### You are okay with
 - not being able to scan IPv6 addresses
 - results being up to 7 days old
-- some rare unreliable software detection when not using `--active`
+- some rare unreliable software detection in passive mode
 
-> Note: if you use `--active`, Smap will run `nmap` against the target and make active connections.
+> Note: if you use `--nmap`, Smap will run `nmap` against the target and make active connections. Because Shodan's data can be stale or incomplete, using it as a port filter can miss open ports.

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"regexp"
@@ -53,6 +54,9 @@ type outputHandlers struct {
 func getPorts() []int {
 	thesePorts := []int{}
 	if value, ok := g.Args["p"]; ok {
+		if value == "-" {
+			return thesePorts
+		}
 		for _, port := range strings.Split(value, ",") {
 			portList := strings.Split(port, "-")
 			if len(portList) == 2 {
@@ -193,6 +197,12 @@ func getOutputHandlers() outputHandlers {
 			write: []func(g.Output){o.ContinueGrep},
 			end:   []func(){o.EndGrep},
 		}
+	} else if _, ok := g.Args["oN"]; ok {
+		return outputHandlers{
+			start: []func(){o.StartNmap},
+			write: []func(g.Output){o.ContinueNmap},
+			end:   []func(){o.EndNmap},
+		}
 	} else if value, ok := g.Args["oJ"]; ok {
 		g.JsonFilename = value
 		return outputHandlers{
@@ -219,21 +229,6 @@ func getOutputHandlers() outputHandlers {
 		start: []func(){o.StartNmap},
 		write: []func(g.Output){o.ContinueNmap},
 		end:   []func(){o.EndNmap},
-	}
-}
-
-func renderResults(results []g.Output) {
-	handlers := getOutputHandlers()
-	for _, function := range handlers.start {
-		function()
-	}
-	for _, result := range results {
-		for _, function := range handlers.write {
-			function(result)
-		}
-	}
-	for _, function := range handlers.end {
-		function()
 	}
 }
 
@@ -348,7 +343,8 @@ func processScanObject(object scanObject) {
 	} else {
 		filteredPorts = data.Ports
 	}
-	output.Ports, output.OS = Correlate(filteredPorts, data.Cpes)
+	output.ObservedCpes = data.Cpes
+	output.Ports, output.OS, output.UnassignedCpes = Correlate(filteredPorts, data.Cpes)
 	output.Start = scanStarted
 	output.End = time.Now()
 	g.Increment(1)
@@ -357,61 +353,91 @@ func processScanObject(object scanObject) {
 
 func Init() {
 	args, extra, invalid := ParseArgs()
+	_, nmapMode := args["nmap"]
 	if invalid {
 		fmt.Fprintln(os.Stderr, "One or more of your arguments are invalid. Refer to docs.\nQUITTING!")
 		os.Exit(1)
-	} else if _, ok := args["h"]; ok || len(os.Args) == 1 {
+	} else if _, ok := args["V"]; ok && !nmapMode {
+		fmt.Printf("Smap %s\n", g.Version)
+		return
+	} else if _, ok := args["h"]; ok && !nmapMode || len(os.Args) == 1 {
 		fmt.Print(db.HelpText)
 		os.Exit(0)
 	}
 	g.Args = args
-	g.OutputPorts = nil
 	seenTargets = sync.Map{}
+	if nmapMode {
+		if err := validateNmapMode(); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+			os.Exit(1)
+		}
+		if !shouldPrefilterNmap(g.Args, extra) {
+			if exitCode := runNmap(nil, "", false); exitCode != 0 {
+				os.Exit(exitCode)
+			}
+			return
+		}
+	}
 	concurrency, err := getConcurrency()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
 		os.Exit(1)
 	}
 	g.Concurrency = concurrency
-	if err := json.Unmarshal(db.NmapSigs, &Probes); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load embedded probe signatures: %v\nQUITTING!\n", err)
-		os.Exit(1)
-	}
-	if err := json.Unmarshal(db.NmapTable, &Table); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load embedded port table: %v\nQUITTING!\n", err)
-		os.Exit(1)
-	}
+	json.Unmarshal(db.Capabilities, &catalog)
+	json.Unmarshal(db.Ports, &Table)
+	buildCapabilities()
 	g.PortList = getPorts()
 	g.ScanStartTime = time.Now()
 	go scanner()
-	if _, ok := g.Args["active"]; ok {
-		if err := validateActiveMode(); err != nil {
-			fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
-			os.Exit(1)
+	if nmapMode {
+		input := io.Reader(os.Stdin)
+		var stdinTargets *os.File
+		if value, ok := g.Args["iL"]; ok && value == "-" {
+			stdinTargets, err = os.CreateTemp("", "smap-nmap-targets-")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to preserve stdin targets for Nmap: %v\nQUITTING!\n", err)
+				os.Exit(1)
+			}
+			input = io.TeeReader(os.Stdin, stdinTargets)
 		}
 		resultsChannel := make(chan []g.Output, 1)
 		go collectOutput(resultsChannel)
-		enqueueTargets(extra)
+		enqueueTargets(extra, input)
 		activeScans.Wait()
 		close(targetsChannel)
 		activeOutputs.Wait()
 		close(outputChannel)
 		passiveResults := <-resultsChannel
-		activeResults, activeStats, err := enrichActive(passiveResults)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
-			os.Exit(1)
+		stdinTargetsPath := ""
+		if stdinTargets != nil {
+			stdinTargetsPath = stdinTargets.Name()
+			if err := stdinTargets.Close(); err != nil {
+				os.Remove(stdinTargetsPath)
+				fmt.Fprintf(os.Stderr, "Failed to preserve stdin targets for Nmap: %v\nQUITTING!\n", err)
+				os.Exit(1)
+			}
 		}
-		totalHosts := int(g.TotalHosts)
-		g.ScanEndTime = time.Now()
-		g.SetCounts(totalHosts, activeStats.AliveHosts)
-		g.OutputPorts = candidatePortUnion(passiveResults)
-		renderResults(activeResults)
-		fmt.Fprintln(os.Stderr, formatActiveSummary(totalHosts, activeStats))
+		ports := candidatePortUnion(passiveResults)
+		if len(ports) == 0 {
+			if stdinTargetsPath != "" {
+				os.Remove(stdinTargetsPath)
+			}
+			fmt.Fprintf(os.Stderr, "Smap: Shodan found no candidate ports across %d targets; Nmap was not run.\n", g.TotalHosts)
+			return
+		}
+		fmt.Fprintf(os.Stderr, "Smap: Shodan found %d candidate ports across %d targets; running Nmap.\n", len(ports), g.TotalHosts)
+		exitCode := runNmap(ports, stdinTargetsPath, true)
+		if stdinTargetsPath != "" {
+			os.Remove(stdinTargetsPath)
+		}
+		if exitCode != 0 {
+			os.Exit(exitCode)
+		}
 		return
 	}
 	go handleOutput()
-	enqueueTargets(extra)
+	enqueueTargets(extra, os.Stdin)
 	activeScans.Wait()
 	close(targetsChannel)
 	g.ScanEndTime = time.Now()
@@ -420,9 +446,9 @@ func Init() {
 	activeEnders.Wait()
 }
 
-func enqueueTargets(extra []string) {
+func enqueueTargets(extra []string, input io.Reader) {
 	if value, ok := g.Args["iL"]; ok {
-		scanner := bufio.NewScanner(os.Stdin)
+		scanner := bufio.NewScanner(input)
 		if value != "-" {
 			file, err := os.Open(value)
 			if err != nil {

@@ -18,7 +18,7 @@ func GetCommand() string {
 			continue
 		}
 		switch {
-		case token == "--active":
+		case token == "--nmap":
 			continue
 		case token == "--append-output":
 			continue
@@ -36,13 +36,9 @@ func GetCommand() string {
 
 func ConvertTime(unixTime time.Time, format string) string {
 	if format == "nmap-file" {
-		parts := strings.Split(strings.Replace(unixTime.Format(time.RFC1123), ",", "", 1), " ")
-		return fmt.Sprintf("%s %s %s %s %s", parts[0], parts[2], parts[1], parts[4], parts[3])
+		return unixTime.Format("Mon Jan _2 15:04:05 2006")
 	} else if format == "nmap-stdout" {
-		rawDate := strings.Split(unixTime.Format(time.RFC3339), "T")[0]
-		formattedDate := strings.Replace(rawDate, ":", "-", -1)
-		parts := strings.Split(unixTime.Format(time.RFC822), " ")
-		return fmt.Sprintf("%s %s %s", formattedDate, parts[3], parts[4])
+		return unixTime.Format("2006-01-02 15:04 -0700")
 	}
 	return fmt.Sprintf("%d", unixTime.Unix())
 }

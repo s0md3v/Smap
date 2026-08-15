@@ -32,12 +32,14 @@ func formatScriptOutput(script g.Script) string {
 
 func StartNmap() {
 	if value, ok := g.Args["oN"]; ok {
-		openedNmapFile = OpenFile(value)
+		if value != "-" {
+			openedNmapFile = OpenFile(value)
+		}
 		startstr := ConvertTime(g.ScanStartTime, "nmap-file")
-		Write(fmt.Sprintf("# Starting Nmap 9.99 ( https://nmap.org ) at %s as: %s\n", startstr, GetCommand()), value, openedNmapFile)
+		Write(fmt.Sprintf("# Nmap 7.99 scan initiated %s as: %s\n", startstr, GetCommand()), value, openedNmapFile)
 	} else {
 		startstr := ConvertTime(g.ScanStartTime, "nmap-stdout")
-		Write(fmt.Sprintf("Starting Nmap 9.99 ( https://nmap.org ) at %s\n", startstr), "-", openedNmapFile)
+		Write(fmt.Sprintf("Starting Nmap 7.99 ( https://nmap.org ) at %s\n", startstr), "-", openedNmapFile)
 	}
 }
 
@@ -71,13 +73,7 @@ func ContinueNmap(result g.Output) {
 	serviceString := ""
 	for _, port := range result.Ports {
 		strPort := fmt.Sprintf("%d/%s", port.Port, port.Protocol)
-		productLine := ""
-		if port.Product != "" {
-			productLine += port.Product
-			if port.Version != "" {
-				productLine += " " + port.Version
-			}
-		}
+		productLine := strings.TrimSpace(port.Product + " " + port.Version)
 		thisOutput += fmt.Sprintf("%s%s  %s%s\n", strPort, pad("open", longestPort-len(strPort)+1), port.Service, pad(productLine, longestService-len(port.Service)+2))
 		for _, script := range port.Scripts {
 			thisOutput += formatScriptOutput(script)
@@ -102,10 +98,8 @@ func ContinueNmap(result g.Output) {
 	thisOutput += "\n"
 	if value, ok := g.Args["oN"]; ok {
 		Write(thisOutput, value, openedNmapFile)
-		Write(serviceDetectionNotice, value, openedNmapFile)
 	} else {
 		Write(thisOutput, "-", openedNmapFile)
-		Write(serviceDetectionNotice, "-", openedNmapFile)
 	}
 }
 
@@ -121,10 +115,12 @@ func EndNmap() {
 	}
 	footer := ""
 	if value, ok := g.Args["oN"]; ok {
+		Write(serviceDetectionNotice, value, openedNmapFile)
 		endstr := ConvertTime(g.ScanEndTime, "nmap-file")
 		footer += fmt.Sprintf("# Nmap done at %s -- %d IP address%s (%d host%s up) scanned in %s seconds\n", endstr, g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
 		Write(footer, value, openedNmapFile)
 	} else {
+		Write(serviceDetectionNotice, "-", openedNmapFile)
 		footer += fmt.Sprintf("Nmap done: %d IP address%s (%d host%s up) scanned in %s seconds\n", g.TotalHosts, esTotal, g.AliveHosts, sAlive, elapsed)
 		Write(footer, "-", openedNmapFile)
 	}

@@ -15,7 +15,7 @@ func StartGrep() {
 		openedGrepFile = OpenFile(g.GrepFilename)
 	}
 	startstr := ConvertTime(g.ScanStartTime, "nmap-file")
-	Write(fmt.Sprintf("# Nmap 9.99 scan initiated %s as: %s\n", startstr, GetCommand()), g.GrepFilename, openedGrepFile)
+	Write(fmt.Sprintf("# Nmap 7.99 scan initiated %s as: %s\n", startstr, GetCommand()), g.GrepFilename, openedGrepFile)
 }
 
 func ContinueGrep(result g.Output) {
@@ -30,12 +30,8 @@ func ContinueGrep(result g.Output) {
 	entireString := fmt.Sprintf("%s Status: Up\n", hostPrefix)
 	thesePorts := []string{}
 	for _, port := range result.Ports {
-		thisPort := fmt.Sprintf("%d/open/%s//%s//%s", port.Port, port.Protocol, port.Service, port.Product)
-		if port.Version != "" {
-			thisPort += fmt.Sprintf(" %s/", port.Version)
-		} else {
-			thisPort += "/"
-		}
+		productVersion := strings.TrimSpace(port.Product + " " + port.Version)
+		thisPort := fmt.Sprintf("%d/open/%s//%s//%s/", port.Port, port.Protocol, port.Service, productVersion)
 		thesePorts = append(thesePorts, thisPort)
 	}
 	entireString += fmt.Sprintf("%s Ports: %s\n", hostPrefix, strings.Join(thesePorts, ", "))

@@ -80,6 +80,7 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"min-rate":            false,
 	"max-rate":            false,
 	"f":                   true,
+	"mtu":                 false,
 	"D":                   false,
 	"S":                   false,
 	"e":                   false,
@@ -107,7 +108,8 @@ var validArgs = map[string]bool{ // name : is_boolean_type
 	"packet-trace":        true,
 	"iflist":              true,
 	"append-output":       true,
-	"active":              true,
+	"noninteractive":      true,
+	"nmap":                true,
 	"concurrency":         false,
 	"resume":              false,
 	"stylesheet":          false,
@@ -143,6 +145,9 @@ func whatToDo(token string, lastAction int) (string, int) {
 			return newToken, 0
 		}
 		argName := strings.Replace(newToken, "_", "-", -1)
+		if len(argName) > 1 && (strings.Trim(argName, "v") == "" || strings.Trim(argName, "d") == "") {
+			return argName, 0
+		}
 		if boolType, ok := validArgs[argName]; ok {
 			if boolType {
 				return argName, 0
@@ -162,6 +167,11 @@ func ParseArgs() (map[string]string, []string, bool) {
 	var extra []string
 	argPair := map[string]string{}
 	for _, token := range os.Args[1:] {
+		if token == "-p-" {
+			argPair["p"] = "-"
+			lastAction = 0
+			continue
+		}
 		groups := reValidPair.FindStringSubmatch(token)
 		if strings.HasPrefix(token, "-") && (strings.Contains(token, "=") || groups != nil) {
 			if lastAction == 1 {
