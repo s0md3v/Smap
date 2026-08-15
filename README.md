@@ -1,11 +1,10 @@
-<h1 align="center">
-  <br>
+<h4 align="center">
   <a href="https://github.com/s0md3v/smap"><img src="/static/smap-logo.png" alt="Smap logo"></a>
-</h1>
+</h4>
 
-<h4 align="center">passive Nmap like scanner built with shodan.io</h4>
+<h4 align="center">nmap alternative powered by shodan.io</h4>
 
----
+<p align="center"><img src="/static/smap-demo.png" alt="Smap demo"></p>
 
 Smap is a passive port scanner built with shodan.io's free API. It takes the same command line arguments as Nmap and produces the same output, which makes it a drop-in replacement for Nmap.
 
