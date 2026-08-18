@@ -8,6 +8,7 @@ import (
 )
 
 const defaultConcurrency = 3
+const defaultShodanRPS = 1.0
 
 func parsePositiveInt(raw string, name string) (int, error) {
 	value, err := strconv.Atoi(raw)
@@ -22,4 +23,15 @@ func getConcurrency() (int, error) {
 		return parsePositiveInt(value, "--concurrency")
 	}
 	return defaultConcurrency, nil
+}
+
+func getShodanRPS() (float64, error) {
+	if value, ok := g.Args["shodan-rate"]; ok {
+		parsed, err := strconv.ParseFloat(value, 64)
+		if err != nil || parsed <= 0 {
+			return 0, fmt.Errorf("--shodan-rate must be a positive number")
+		}
+		return parsed, nil
+	}
+	return defaultShodanRPS, nil
 }

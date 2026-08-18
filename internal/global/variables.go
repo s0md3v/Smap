@@ -31,6 +31,7 @@ var (
 	PairFilename  string
 	Args          map[string]string
 	Concurrency   int
+	ShodanRPS     float64
 	TotalHosts    count32
 	AliveHosts    count32
 	Version       = "1.0.0-beta"
