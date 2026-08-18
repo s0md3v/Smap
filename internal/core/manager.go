@@ -384,6 +384,12 @@ func Init() {
 		os.Exit(1)
 	}
 	g.Concurrency = concurrency
+	shodanRPS, err := getShodanRPS()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\nQUITTING!\n", err)
+		os.Exit(1)
+	}
+	g.ShodanRPS = shodanRPS
 	json.Unmarshal(db.Capabilities, &catalog)
 	json.Unmarshal(db.Ports, &Table)
 	buildCapabilities()
